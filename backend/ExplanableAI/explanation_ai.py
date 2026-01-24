@@ -11,6 +11,37 @@ def safe_get(d, path, default=None):
     return d
 
 
+def generate_summary(data: dict) -> str:
+    """Generate a brief summary of the risk assessment"""
+    risk_level = data.get("risk_level", "Unknown")
+    risk_score = data.get("risk_score", 0)
+    
+    # Find the highest contributing factor
+    percentages = data.get("percentage_breakdown", {})
+    if not percentages:
+        return f"Risk Level: {risk_level} (Score: {risk_score})"
+    
+    max_factor = max(percentages, key=percentages.get)
+    max_percentage = percentages[max_factor]
+    
+    factor_names = {
+        "immediate_glycemic_percentage": "blood glucose levels",
+        "treatment_symptom_percentage": "treatment and symptoms", 
+        "baseline_vulnerability_percentage": "baseline health factors"
+    }
+    
+    main_factor = factor_names.get(max_factor, "health factors")
+    
+    if risk_score > 50:
+        urgency = "Requires immediate attention"
+    elif risk_score > 25:
+        urgency = "Needs monitoring"
+    else:
+        urgency = "Well managed"
+    
+    return f"{risk_level} (Score: {risk_score}). Primary concern: {main_factor} ({max_percentage}%). {urgency}."
+
+
 def generate_explanation(data: dict):
     explanation = []
 

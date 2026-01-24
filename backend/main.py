@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from sqlalchemy import text
 from database import engine, Base, SessionLocal
 from api import auth_router, risk_router
-from ExplanableAI.explanation_ai import generate_explanation
+from ExplanableAI.explanation_ai import generate_explanation, generate_summary
 
 # ---------- CREATE TABLES ----------
 Base.metadata.create_all(bind=engine)
@@ -35,7 +35,9 @@ def test_database():
 @app.post("/explain")
 def explain_risk(risk_data: dict):
     explanation = generate_explanation(risk_data)
+    summary = generate_summary(risk_data)
     return {
         "risk_level": risk_data.get("risk_level"),
+        "summary": summary,
         "explanation": explanation
     }
