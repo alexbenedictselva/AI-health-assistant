@@ -38,7 +38,8 @@ def metrics(data: RiskInput):
         meal_type=data.meal_type,
         diabetes_status=data.diabetes_status,
         age=data.age,
-        bmi_category=data.bmi_category,
+        weight_kg=data.weight_kg,
+        height_cm=data.height_cm,
         family_history=data.family_history,
         physical_activity=data.physical_activity
     )

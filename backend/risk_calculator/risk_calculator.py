@@ -7,7 +7,8 @@ def calculate_risk_score(
     meal_type,
     diabetes_status,
     age,
-    bmi_category,
+    weight_kg,          # NEW
+    height_cm,          # NEW
     family_history,
     physical_activity
 ):
@@ -85,11 +86,24 @@ def calculate_risk_score(
     else:
         age_points = 5
 
-    bmi_points = {
-        "normal": 0,
-        "overweight": 2,
-        "obese": 5
-    }[bmi_category]
+    # -----------------------------
+    # BMI CALCULATION (NEW)
+    # -----------------------------
+    height_m = height_cm / 100
+    bmi = weight_kg / (height_m ** 2)
+
+    if bmi < 18.5:
+        bmi_points = 0
+        bmi_category = "underweight"
+    elif bmi < 25:
+        bmi_points = 0
+        bmi_category = "normal"
+    elif bmi < 30:
+        bmi_points = 2
+        bmi_category = "overweight"
+    else:
+        bmi_points = 5
+        bmi_category = "obese"
 
     family_points = 5 if family_history else 0
 
@@ -108,7 +122,6 @@ def calculate_risk_score(
     )
 
     total_score += baseline_risk
-
     total_score = min(total_score, 100)
 
     if total_score <= 25:
@@ -123,6 +136,10 @@ def calculate_risk_score(
     return {
         "risk_score": total_score,
         "risk_level": risk_level,
+        "derived_metrics": {
+            "bmi": round(bmi, 2),
+            "bmi_category": bmi_category
+        },
         "breakdown": {
             "immediate_glycemic_risk": immediate_glycemic_risk,
             "treatment_symptom_risk": treatment_symptom_risk,
