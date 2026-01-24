@@ -144,5 +144,29 @@ def calculate_risk_score(
             "immediate_glycemic_risk": immediate_glycemic_risk,
             "treatment_symptom_risk": treatment_symptom_risk,
             "baseline_vulnerability_risk": baseline_risk
+        },
+        "percentage_breakdown": {
+            "immediate_glycemic_percentage": round((immediate_glycemic_risk / total_score) * 100, 1) if total_score > 0 else 0,
+            "treatment_symptom_percentage": round((treatment_symptom_risk / total_score) * 100, 1) if total_score > 0 else 0,
+            "baseline_vulnerability_percentage": round((baseline_risk / total_score) * 100, 1) if total_score > 0 else 0
+        },
+        "attribution": {
+            "immediate_glycemic": {
+                "glucose_context": measurement_context,
+                "glucose_value": glucose_value,
+                "trend": trend
+            },
+            "treatment_symptoms": {
+                "symptoms": symptoms,
+                "medication": medication_type,
+                "meal_type": meal_type
+            },
+            "baseline": {
+                "diabetes_status": diabetes_status,
+                "age": age,
+                "bmi_category": bmi_category,
+                "family_history": family_history,
+                "physical_activity": physical_activity
+            }
         }
     }
