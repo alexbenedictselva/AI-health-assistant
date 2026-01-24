@@ -26,3 +26,19 @@ def calculate_risk(data: RiskInput):
         family_history=data.family_history,
         physical_activity=data.physical_activity
     )
+
+@app.post("/metrics")
+def metrics(data: RiskInput):
+    return calculate_risk_score(
+        glucose_value=data.glucose_value,
+        measurement_context=data.measurement_context,
+        trend=data.trend,
+        symptoms=data.symptoms,
+        medication_type=data.medication_type,
+        meal_type=data.meal_type,
+        diabetes_status=data.diabetes_status,
+        age=data.age,
+        bmi_category=data.bmi_category,
+        family_history=data.family_history,
+        physical_activity=data.physical_activity
+    )
