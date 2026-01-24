@@ -1,6 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from risk_calculator.model import RiskInput
 from risk_calculator.risk_calculator import calculate_risk_score
+from database import engine, SessionLocal
+from sqlalchemy import text
 
 app = FastAPI(
     title="AI Health Assistant – Glucose Risk API",
@@ -10,6 +12,16 @@ app = FastAPI(
 @app.get("/")
 def root():
     return {"status": "Backend is running"}
+
+@app.get("/db-test")
+def test_database():
+    try:
+        db = SessionLocal()
+        result = db.execute(text("SELECT 1 as test"))
+        db.close()
+        return {"status": "Database connected successfully", "test_query": "OK"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database connection failed: {str(e)}")
 
 @app.post("/calculate-risk")
 def calculate_risk(data: RiskInput):
