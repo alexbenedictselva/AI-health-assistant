@@ -1,4 +1,4 @@
-# db_models.py
+# models/user.py
 
 from sqlalchemy import (
     Column,
