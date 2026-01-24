@@ -41,3 +41,15 @@ def explain_risk(risk_data: dict):
         "summary": summary,
         "explanation": explanation
     }
+
+@app.post("/explain-cardiac")
+def explain_cardiac_risk(risk_data: dict):
+    from risk_calculator.cardiac_explanation_ai import generate_cardiac_explanation, generate_cardiac_summary
+    
+    explanation = generate_cardiac_explanation(risk_data)
+    summary = generate_cardiac_summary(risk_data)
+    return {
+        "risk_level": risk_data.get("risk_level"),
+        "summary": summary,
+        "explanation": explanation
+    }

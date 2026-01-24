@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter
 from risk_calculator.model import RiskInput
+from risk_calculator.cardiac_model import CardiacRiskInput
 from risk_calculator.risk_calculator import calculate_risk_score
 
 router = APIRouter()
@@ -39,3 +40,36 @@ def metrics(data: RiskInput):
         family_history=data.family_history,
         physical_activity=data.physical_activity
     )
+
+@router.post("/cardiac-risk")
+def calculate_cardiac_risk_endpoint(data: CardiacRiskInput):
+    from risk_calculator.cardiac_risk_calculator import calculate_cardiac_risk
+    
+    # Convert Pydantic model to dict
+    risk_data = data.dict()
+    
+    # Calculate risk
+    result = calculate_cardiac_risk(risk_data)
+    
+    # Add percentage breakdown
+    total_score = result["risk_score"]
+    attribution = result["attribution"]
+    
+    immediate_total = sum(attribution["immediate"].values())
+    lifestyle_total = sum(attribution["lifestyle"].values())
+    baseline_total = sum(attribution["baseline"].values())
+    
+    if total_score > 0:
+        result["percentage_breakdown"] = {
+            "immediate_cardiac_percentage": round((immediate_total / total_score) * 100, 1),
+            "lifestyle_percentage": round((lifestyle_total / total_score) * 100, 1),
+            "baseline_percentage": round((baseline_total / total_score) * 100, 1)
+        }
+    else:
+        result["percentage_breakdown"] = {
+            "immediate_cardiac_percentage": 0,
+            "lifestyle_percentage": 0,
+            "baseline_percentage": 0
+        }
+    
+    return result
