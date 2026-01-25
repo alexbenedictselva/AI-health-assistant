@@ -27,7 +27,11 @@ const Login: React.FC = () => {
 
     try {
       const response = await authAPI.login(formData);
-      const userData = { id: 1, name: formData.email.split('@')[0], email: formData.email };
+      const userData = response.data.user || { 
+        id: Date.now() + Math.floor(Math.random() * 1000), 
+        name: formData.email.split('@')[0], 
+        email: formData.email 
+      };
       login(response.data.access_token, userData);
       navigate('/dashboard');
     } catch (err: any) {

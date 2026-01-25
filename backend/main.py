@@ -23,7 +23,7 @@ app.add_middleware(
 # ---------- CREATE TABLES ----------
 try:
     with engine.connect() as conn:
-        conn.execute(text("DROP TABLE IF EXISTS user_metrics"))
+        conn.execute(text("DELETE FROM user_metrics"))
         conn.commit()
 except:
     pass

@@ -43,8 +43,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
     } else {
-      // Default user data if not provided
-      const defaultUser = { id: 1, name: 'User', email: '' };
+      // Generate unique user ID based on timestamp and random number
+      const uniqueId = Date.now() + Math.floor(Math.random() * 1000);
+      const defaultUser = { id: uniqueId, name: 'User', email: '' };
       localStorage.setItem('user', JSON.stringify(defaultUser));
       setUser(defaultUser);
     }
