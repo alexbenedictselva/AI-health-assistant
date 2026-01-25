@@ -11,6 +11,14 @@
   --success: #28a745;
   --warning: #FFC857;
   --danger: #DC3545;
+  
+  /* Additional variables for compatibility */
+  --primary-green: #2F6F44;
+  --light-green: #7FD3C3;
+  --very-light-green: #E8F5E9;
+  --pale-green: #F0FFF4;
+  --gray-dark: #374151;
+  --gray-medium: #6B7280;
 }
 
 * {

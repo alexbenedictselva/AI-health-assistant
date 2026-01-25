@@ -88,9 +88,9 @@ export const authAPI = {
 export const riskAPI = {
   calculateDiabetesRisk: (data: DiabetesRiskData) => api.post('/diabetes-risk', data),
   calculateCardiacRisk: (data: CardiacRiskData) => api.post('/cardiac-risk', data),
-  getDiabetesExplanation: (data: any) => api.post('/explain-diabetes', data),
+  getDiabetesExplanation: (data: any) => api.post('/explain', data),
   getCardiacExplanation: (data: any) => api.post('/explain-cardiac', data),
-  getDiabetesRecommendations: (data: any) => api.post('/diabetes-recommendations', data),
+  getDiabetesRecommendations: (data: any) => api.post('/recommendations', data),
   getCardiacRecommendations: (data: any) => api.post('/cardiac-recommendations', data),
 };
 

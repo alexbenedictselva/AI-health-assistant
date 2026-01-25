@@ -14,7 +14,7 @@ const DiabetesAssessment: React.FC = () => {
     meal_type: 'balanced',
     physical_activity: 'sometimes',
     diabetes_status: 'non-diabetic',
-    age: 0,
+    age: 1,
     weight_kg: 0,
     height_cm: 0,
     family_history: false
@@ -27,10 +27,21 @@ const DiabetesAssessment: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
+    let processedValue = value;
+    
+    // Map symptoms display values to backend values
+    if (name === 'symptoms') {
+      if (value === 'low-sugar' || value === 'high-sugar') {
+        processedValue = 'mild';
+      } else if (value === 'both-symptoms') {
+        processedValue = 'severe';
+      }
+    }
+    
     setFormData({
       ...formData,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
-              type === 'number' ? parseFloat(value) || 0 : value
+              type === 'number' ? (value === '' ? '' : parseFloat(value) || 0) : processedValue
     });
   };
 
@@ -40,23 +51,33 @@ const DiabetesAssessment: React.FC = () => {
     setError('');
 
     try {
-      // Calculate risk with explanation and store metrics
+      // Calculate risk with explanation
       const response = await riskAPI.calculateDiabetesRisk(formData);
       setResult(response.data);
 
-      // Get recommendations
-      const recResponse = await riskAPI.getDiabetesRecommendations(response.data);
-      setRecommendations(recResponse.data);
+      // Try to get recommendations (don't fail if this fails)
+      try {
+        const recResponse = await riskAPI.getDiabetesRecommendations(response.data);
+        setRecommendations(recResponse.data);
+      } catch (recErr) {
+        console.warn('Recommendations failed:', recErr);
+        // Continue without recommendations
+      }
 
-      // Store user metrics
-      const metricsData = {
-        ...formData,
-        disease_type: 'diabetes'
-      };
-      await metricsAPI.createMetrics(metricsData);
+      // Try to store user metrics (don't fail if this fails)
+      try {
+        const metricsData = {
+          ...formData,
+          disease_type: 'diabetes'
+        };
+        await metricsAPI.createMetrics(metricsData);
+      } catch (metricsErr) {
+        console.warn('Metrics storage failed:', metricsErr);
+        // Continue without storing metrics
+      }
     } catch (err: any) {
       console.error('Assessment error:', err);
-      setError('Network error. Please check if the backend server is running.');
+      setError('Failed to calculate risk. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -89,8 +110,9 @@ const DiabetesAssessment: React.FC = () => {
                 value={formData.glucose_value}
                 onChange={handleChange}
                 required
-                min="0"
+                min="1"
                 step="0.1"
+                placeholder="Enter glucose value"
               />
             </div>
             
@@ -129,12 +151,13 @@ const DiabetesAssessment: React.FC = () => {
               <select
                 name="symptoms"
                 className="form-select"
-                value={formData.symptoms}
+                value={formData.symptoms === 'mild' ? 'low-sugar' : formData.symptoms === 'severe' ? 'both-symptoms' : formData.symptoms}
                 onChange={handleChange}
               >
-                <option value="none">None</option>
-                <option value="mild">Mild</option>
-                <option value="severe">Severe</option>
+                <option value="none">None of these</option>
+                <option value="low-sugar">Low sugar symptoms</option>
+                <option value="high-sugar">High sugar symptoms</option>
+                <option value="both-symptoms">Both low and high sugar</option>
               </select>
             </div>
           </div>
@@ -210,8 +233,9 @@ const DiabetesAssessment: React.FC = () => {
                 value={formData.age}
                 onChange={handleChange}
                 required
-                min="0"
+                min="1"
                 max="120"
+                placeholder="Enter age"
               />
             </div>
             
@@ -224,8 +248,9 @@ const DiabetesAssessment: React.FC = () => {
                 value={formData.weight_kg}
                 onChange={handleChange}
                 required
-                min="0"
+                min="1"
                 step="0.1"
+                placeholder="Enter weight"
               />
             </div>
           </div>
@@ -240,8 +265,9 @@ const DiabetesAssessment: React.FC = () => {
                 value={formData.height_cm}
                 onChange={handleChange}
                 required
-                min="0"
+                min="1"
                 step="0.1"
+                placeholder="Enter height"
               />
             </div>
             

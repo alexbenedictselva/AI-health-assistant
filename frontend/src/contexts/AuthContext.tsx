@@ -25,8 +25,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const userData = localStorage.getItem('user');
     
     if (token && userData) {
-      setUser(JSON.parse(userData));
-      setIsAuthenticated(true);
+      try {
+        setUser(JSON.parse(userData));
+        setIsAuthenticated(true);
+      } catch (error) {
+        // Clear invalid data
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        console.error('Invalid user data in localStorage:', error);
+      }
     }
   }, []);
 
