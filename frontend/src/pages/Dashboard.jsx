@@ -59,12 +59,13 @@ const Dashboard = ({ onNavigate, userProfile, assessmentData, onRunAssessment, h
           gap: '32px',
           alignItems: 'center'
         }}>
-          {['Dashboard', 'Health Metrics', 'Assessments', 'Assistant', 'Settings'].map((tab) => (
+          {['Dashboard', 'Health Metrics', 'Assessments', 'Exercises', 'Assistant', 'Settings'].map((tab) => (
             <span
               key={tab}
               onClick={() => {
                 if (tab === 'Health Metrics') onNavigate('healthMetrics');
                 else if (tab === 'Assessments') onNavigate('assessments');
+                else if (tab === 'Exercises') onNavigate('exercises');
                 else if (tab === 'Assistant') onNavigate('assistant');
                 else if (tab === 'Settings') onNavigate('settings');
               }}
@@ -81,7 +82,7 @@ const Dashboard = ({ onNavigate, userProfile, assessmentData, onRunAssessment, h
             </span>
           ))}}
           <button
-            onClick={() => onNavigate('signup')}
+            onClick={() => onNavigate('login')}
             style={{
               padding: '6px 12px',
               backgroundColor: 'transparent',
@@ -384,6 +385,29 @@ const Dashboard = ({ onNavigate, userProfile, assessmentData, onRunAssessment, h
         </div>
 
         <div 
+          onClick={() => onNavigate('exercises')}
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            cursor: 'pointer',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            transition: 'transform 0.2s ease'
+          }}
+          onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
+          onMouseLeave={(e) => e.target.style.transform = 'translateY(0px)'}
+        >
+          <div>
+            <h4 style={{ fontSize: '16px', fontWeight: '600', color: '#333', margin: '0 0 4px 0' }}>Start Exercise Session</h4>
+            <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>Gentle yoga for your health condition</p>
+          </div>
+          <div style={{ fontSize: '18px', color: '#1E88E5' }}>🧘‍♀️</div>
+        </div>
+
+        <div 
           onClick={() => onNavigate('assistant')}
           style={{
             backgroundColor: 'white',
@@ -465,26 +489,10 @@ const Dashboard = ({ onNavigate, userProfile, assessmentData, onRunAssessment, h
             <RiskScoreSection />
             <RecommendationSection />
             <MetricsSection />
-            <ScrollableDashboardContent />
           </div>
           
           <div>
             <ProfileSection />
-            {assessmentData && (
-              <div style={{
-                backgroundColor: 'white',
-                borderRadius: '12px',
-                padding: '24px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-              }}>
-                <ExplanationPanel factors={assessmentData.mainFactors} />
-                <GoalTracker
-                  oldGoal={assessmentData.oldGoal}
-                  newGoal={assessmentData.newGoal}
-                  reason={assessmentData.goalReason}
-                />
-              </div>
-            )}
           </div>
         </div>
       </div>

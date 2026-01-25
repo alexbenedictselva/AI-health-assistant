@@ -140,10 +140,16 @@ const Assistant = ({ onNavigate, userProfile, assessmentData }) => {
           gap: '32px',
           alignItems: 'center'
         }}>
-          {['Dashboard', 'Health Metrics', 'Assessments', 'Assistant', 'Settings'].map((tab) => (
+          {['Dashboard', 'Health Metrics', 'Assessments', 'Exercises', 'Assistant', 'Settings'].map((tab) => (
             <span
               key={tab}
-              onClick={() => tab === 'Dashboard' ? onNavigate('dashboard') : tab === 'Settings' ? onNavigate('settings') : null}
+              onClick={() => {
+                if (tab === 'Dashboard') onNavigate('dashboard');
+                else if (tab === 'Health Metrics') onNavigate('healthMetrics');
+                else if (tab === 'Assessments') onNavigate('assessments');
+                else if (tab === 'Exercises') onNavigate('exercises');
+                else if (tab === 'Settings') onNavigate('settings');
+              }}
               style={{
                 fontSize: '14px',
                 fontWeight: '500',
@@ -157,7 +163,7 @@ const Assistant = ({ onNavigate, userProfile, assessmentData }) => {
             </span>
           ))}
           <button
-            onClick={() => onNavigate('signup')}
+            onClick={() => onNavigate('login')}
             style={{
               padding: '6px 12px',
               backgroundColor: 'transparent',

@@ -8,6 +8,11 @@ import AddMetric from "./pages/AddMetric";
 import Assessments from "./pages/Assessments";
 import Assistant from "./pages/Assistant";
 import Settings from "./pages/Settings";
+import ExercisesHome from "./pages/Exercises/ExercisesHome";
+import ExerciseSession from "./pages/Exercises/ExerciseSession";
+import ExerciseReady from "./pages/Exercises/ExerciseReady";
+import ExerciseComplete from "./pages/Exercises/ExerciseComplete";
+import EditWorkout from "./pages/Exercises/EditWorkout";
 
 function App() {
   // Navigation state - start with login for existing users
@@ -28,7 +33,8 @@ function App() {
       activityLevel: 'medium',
       dietQuality: 'Average',
       smoking: 'No',
-      sleepQuality: 'Good'
+      sleepQuality: 'Good',
+      profileCompleted: true
     },
     {
       fullName: 'Sarah Johnson',
@@ -39,7 +45,8 @@ function App() {
       activityLevel: 'high',
       dietQuality: 'Healthy',
       smoking: 'No',
-      sleepQuality: 'Excellent'
+      sleepQuality: 'Excellent',
+      profileCompleted: true
     }
   ]);
   
@@ -66,6 +73,10 @@ function App() {
     { riskScore: 48, riskLevel: 'low', date: '12/6/2024' }
   ]);
 
+  // Exercise state
+  const [currentWorkout, setCurrentWorkout] = useState(null);
+  const [completedExercises, setCompletedExercises] = useState([]);
+
   const handleNavigate = (page) => {
     setCurrentPage(page);
   };
@@ -74,29 +85,15 @@ function App() {
     // Find existing user by email
     const existingUser = registeredUsers.find(user => user.email === loginData.email);
     
-    if (existingUser) {
+    if (existingUser && existingUser.profileCompleted) {
       setUserProfile(existingUser);
-      // Generate initial assessment for existing user
       setTimeout(() => {
         generateAssessment(existingUser);
       }, 100);
+      setCurrentPage('dashboard');
     } else {
-      // For demo purposes, create a basic profile if user not found
-      const demoProfile = {
-        fullName: loginData.fullName || 'Demo User',
-        email: loginData.email,
-        age: '35',
-        gender: 'Other',
-        healthCondition: 'diabetes',
-        activityLevel: 'medium',
-        dietQuality: 'Average',
-        smoking: 'No',
-        sleepQuality: 'Good'
-      };
-      setUserProfile(demoProfile);
-      setTimeout(() => {
-        generateAssessment(demoProfile);
-      }, 100);
+      // Show error - no account found or profile not completed
+      alert('No account found with this email or profile not completed. Please sign up first.');
     }
   };
 
@@ -110,30 +107,27 @@ function App() {
       activityLevel: '',
       dietQuality: '',
       smoking: '',
-      sleepQuality: ''
+      sleepQuality: '',
+      profileCompleted: false
     };
     
-    // Add to registered users
-    setRegisteredUsers(prev => [...prev, newUser]);
     setUserProfile(newUser);
+    setCurrentPage('profile');
   };
 
   const handleCompleteProfile = (profileData) => {
     const updatedProfile = {
       ...userProfile,
-      ...profileData
+      ...profileData,
+      profileCompleted: true
     };
     
-    // Update in registered users array
-    setRegisteredUsers(prev => 
-      prev.map(user => 
-        user.email === userProfile.email ? updatedProfile : user
-      )
-    );
+    // Add to registered users array
+    setRegisteredUsers(prev => [...prev, updatedProfile]);
     
     setUserProfile(updatedProfile);
-    // Generate initial assessment based on profile
     generateAssessment(updatedProfile);
+    setCurrentPage('dashboard');
   };
 
   const handleUpdateProfile = (updatedProfile) => {
@@ -146,10 +140,18 @@ function App() {
   };
 
   const handleAddMetric = (metric) => {
-    setHealthMetrics(prev => [...prev, metric]);
+    // Add metric to state
+    const updatedMetrics = [...healthMetrics, metric];
+    setHealthMetrics(updatedMetrics);
+    
+    // Recalculate risk assessment with new metric
+    generateAssessmentWithMetrics(userProfile, updatedMetrics);
+    
+    // Navigate to assessments page to show updated risk
+    setCurrentPage('assessments');
   };
 
-  const generateAssessment = (profile) => {
+  const generateAssessmentWithMetrics = (profile, metrics) => {
     if (!profile) return;
     
     let riskScore = 50; // Base score
@@ -187,11 +189,53 @@ function App() {
     }
     
     // Adjust risk based on recent health metrics
-    if (healthMetrics.length > 0) {
-      const recentGlucose = healthMetrics.filter(m => m.type === 'Blood Glucose').slice(-1)[0];
-      if (recentGlucose && parseFloat(recentGlucose.value) > 140) {
-        riskScore += 10;
-        riskFactors.push('Elevated blood glucose levels');
+    if (metrics && metrics.length > 0) {
+      // Blood Glucose analysis
+      const recentGlucose = metrics.filter(m => m.type === 'Blood Glucose').slice(-1)[0];
+      if (recentGlucose) {
+        const glucoseValue = parseFloat(recentGlucose.value);
+        if (glucoseValue > 140) {
+          riskScore += 15;
+          riskFactors.push('Elevated blood glucose levels detected');
+        } else if (glucoseValue < 70) {
+          riskScore += 10;
+          riskFactors.push('Low blood glucose levels detected');
+        }
+      }
+      
+      // Blood Pressure analysis
+      const recentBP = metrics.filter(m => m.type === 'Blood Pressure').slice(-1)[0];
+      if (recentBP) {
+        const bpValue = parseFloat(recentBP.value);
+        if (bpValue > 130) {
+          riskScore += 12;
+          riskFactors.push('Elevated blood pressure detected');
+        }
+      }
+      
+      // BMI analysis
+      const recentBMI = metrics.filter(m => m.type === 'BMI').slice(-1)[0];
+      if (recentBMI) {
+        const bmiValue = parseFloat(recentBMI.value);
+        if (bmiValue > 30) {
+          riskScore += 15;
+          riskFactors.push('BMI indicates obesity risk');
+        } else if (bmiValue < 18.5) {
+          riskScore += 8;
+          riskFactors.push('BMI indicates underweight risk');
+        }
+      }
+      
+      // Activity analysis
+      const recentActivity = metrics.filter(m => m.type === 'Activity').slice(-3);
+      if (recentActivity.length > 0) {
+        const avgActivity = recentActivity.reduce((sum, m) => sum + parseFloat(m.value), 0) / recentActivity.length;
+        if (avgActivity < 30) {
+          riskScore += 10;
+          riskFactors.push('Low recent physical activity levels');
+        } else if (avgActivity > 60) {
+          riskScore -= 8;
+        }
       }
     }
     
@@ -206,7 +250,7 @@ function App() {
     // Generate goals and coaching message
     let oldGoal = '10,000 steps/day';
     let newGoal = '7,000 steps/day';
-    let goalReason = 'Adjusted based on your current activity level';
+    let goalReason = 'Adjusted based on your current health metrics';
     let coachingMessage = 'Focus on small, sustainable changes to improve your health.';
     
     if (profile.activityLevel === 'low') {
@@ -239,12 +283,45 @@ function App() {
     setAssessmentHistory(prev => [...prev, newAssessment]);
   };
 
+  const generateAssessment = (profile) => {
+    generateAssessmentWithMetrics(profile, healthMetrics);
+  };
+
   const handleRunAssessment = () => {
     generateAssessment(userProfile);
   };
 
   const handleRunNewAssessment = () => {
     generateAssessment(userProfile);
+  };
+
+  const handleStartWorkout = (workoutData) => {
+    setCurrentWorkout(workoutData);
+  };
+
+  const handleCompleteExercise = (exercise) => {
+    setCompletedExercises(prev => [...prev, exercise]);
+    // Add activity metric
+    const activityMetric = {
+      id: Date.now(),
+      type: 'Activity',
+      value: Math.round(exercise.duration / 60),
+      unit: 'minutes',
+      date: new Date().toLocaleDateString()
+    };
+    setHealthMetrics(prev => [...prev, activityMetric]);
+    
+    // Update current workout to next exercise if in full routine
+    if (currentWorkout && currentWorkout.exercises) {
+      const currentIndex = currentWorkout.exercises.findIndex(ex => ex.id === exercise.id);
+      if (currentIndex < currentWorkout.exercises.length - 1) {
+        const nextExercise = currentWorkout.exercises[currentIndex + 1];
+        setCurrentWorkout(prev => ({
+          ...prev,
+          exercise: nextExercise
+        }));
+      }
+    }
   };
 
   const renderPage = () => {
@@ -281,10 +358,50 @@ function App() {
             onAddMetric={handleAddMetric}
           />
         );
+      case 'exercises':
+        return (
+          <ExercisesHome
+            onNavigate={handleNavigate}
+            onStartWorkout={handleStartWorkout}
+            userProfile={userProfile}
+          />
+        );
+      case 'exerciseReady':
+        return (
+          <ExerciseReady
+            onNavigate={handleNavigate}
+            currentWorkout={currentWorkout}
+          />
+        );
+      case 'exerciseSession':
+        return (
+          <ExerciseSession
+            onNavigate={handleNavigate}
+            currentWorkout={currentWorkout}
+            userProfile={userProfile}
+            onCompleteExercise={handleCompleteExercise}
+          />
+        );
+      case 'exerciseComplete':
+        return (
+          <ExerciseComplete
+            onNavigate={handleNavigate}
+            completedExercises={completedExercises}
+            currentWorkout={currentWorkout}
+          />
+        );
+      case 'editWorkout':
+        return (
+          <EditWorkout
+            onNavigate={handleNavigate}
+            userProfile={userProfile}
+          />
+        );
       case 'assessments':
         return (
           <Assessments
             onNavigate={handleNavigate}
+            assessmentData={assessmentData}
             assessmentHistory={assessmentHistory}
             onRunNewAssessment={handleRunNewAssessment}
           />

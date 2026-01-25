@@ -94,10 +94,16 @@ const Settings = ({ onNavigate, userProfile, onUpdateProfile }) => {
           gap: '32px',
           alignItems: 'center'
         }}>
-          {['Dashboard', 'Health Metrics', 'Assessments', 'Assistant', 'Settings'].map((tab) => (
+          {['Dashboard', 'Health Metrics', 'Assessments', 'Exercises', 'Assistant', 'Settings'].map((tab) => (
             <span
               key={tab}
-              onClick={() => tab === 'Dashboard' ? onNavigate('dashboard') : tab === 'Assistant' ? onNavigate('assistant') : null}
+              onClick={() => {
+                if (tab === 'Dashboard') onNavigate('dashboard');
+                else if (tab === 'Health Metrics') onNavigate('healthMetrics');
+                else if (tab === 'Assessments') onNavigate('assessments');
+                else if (tab === 'Exercises') onNavigate('exercises');
+                else if (tab === 'Assistant') onNavigate('assistant');
+              }}
               style={{
                 fontSize: '14px',
                 fontWeight: '500',
@@ -111,7 +117,7 @@ const Settings = ({ onNavigate, userProfile, onUpdateProfile }) => {
             </span>
           ))}
           <button
-            onClick={() => onNavigate('signup')}
+            onClick={() => onNavigate('login')}
             style={{
               padding: '6px 12px',
               backgroundColor: 'transparent',
@@ -450,7 +456,7 @@ const Settings = ({ onNavigate, userProfile, onUpdateProfile }) => {
             Sign out of your VitaCare AI account
           </p>
           <button
-            onClick={() => onNavigate('signup')}
+            onClick={() => onNavigate('login')}
             style={{
               padding: '12px 24px',
               backgroundColor: '#E53935',

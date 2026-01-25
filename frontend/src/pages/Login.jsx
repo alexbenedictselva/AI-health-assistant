@@ -16,8 +16,8 @@ const Login = ({ onNavigate, onLogin }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onLogin(formData);
-    onNavigate('dashboard');
+    // Pass email to login handler - App.js will handle navigation
+    onLogin({ email: formData.email });
   };
 
   const handleDemoLogin = () => {

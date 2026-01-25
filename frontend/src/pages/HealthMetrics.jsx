@@ -72,12 +72,13 @@ const HealthMetrics = ({ onNavigate, healthMetrics, onAddMetric }) => {
           gap: '32px',
           alignItems: 'center'
         }}>
-          {['Dashboard', 'Health Metrics', 'Assessments', 'Assistant', 'Settings'].map((tab) => (
+          {['Dashboard', 'Health Metrics', 'Assessments', 'Exercises', 'Assistant', 'Settings'].map((tab) => (
             <span
               key={tab}
               onClick={() => {
                 if (tab === 'Dashboard') onNavigate('dashboard');
                 else if (tab === 'Assessments') onNavigate('assessments');
+                else if (tab === 'Exercises') onNavigate('exercises');
                 else if (tab === 'Assistant') onNavigate('assistant');
                 else if (tab === 'Settings') onNavigate('settings');
               }}
@@ -94,7 +95,7 @@ const HealthMetrics = ({ onNavigate, healthMetrics, onAddMetric }) => {
             </span>
           ))}
           <button
-            onClick={() => onNavigate('signup')}
+            onClick={() => onNavigate('login')}
             style={{
               padding: '6px 12px',
               backgroundColor: 'transparent',

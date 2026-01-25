@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Assessments = ({ onNavigate, assessmentHistory, onRunNewAssessment }) => {
+const Assessments = ({ onNavigate, assessmentData, assessmentHistory, onRunNewAssessment }) => {
   const NavigationBar = () => (
     <div style={{
       backgroundColor: 'white',
@@ -48,12 +48,13 @@ const Assessments = ({ onNavigate, assessmentHistory, onRunNewAssessment }) => {
           gap: '32px',
           alignItems: 'center'
         }}>
-          {['Dashboard', 'Health Metrics', 'Assessments', 'Assistant', 'Settings'].map((tab) => (
+          {['Dashboard', 'Health Metrics', 'Assessments', 'Exercises', 'Assistant', 'Settings'].map((tab) => (
             <span
               key={tab}
               onClick={() => {
                 if (tab === 'Dashboard') onNavigate('dashboard');
                 else if (tab === 'Health Metrics') onNavigate('healthMetrics');
+                else if (tab === 'Exercises') onNavigate('exercises');
                 else if (tab === 'Assistant') onNavigate('assistant');
                 else if (tab === 'Settings') onNavigate('settings');
               }}
@@ -70,7 +71,7 @@ const Assessments = ({ onNavigate, assessmentHistory, onRunNewAssessment }) => {
             </span>
           ))}
           <button
-            onClick={() => onNavigate('signup')}
+            onClick={() => onNavigate('login')}
             style={{
               padding: '6px 12px',
               backgroundColor: 'transparent',
@@ -201,7 +202,7 @@ const Assessments = ({ onNavigate, assessmentHistory, onRunNewAssessment }) => {
 
   const handleRunNewAssessment = () => {
     onRunNewAssessment();
-    onNavigate('dashboard');
+    // Stay on the assessment result page - no navigation
   };
 
   return (
@@ -217,44 +218,322 @@ const Assessments = ({ onNavigate, assessmentHistory, onRunNewAssessment }) => {
         margin: '0 auto',
         padding: '0 24px'
       }}>
+        {/* Header */}
         <div style={{
           display: 'flex',
-          justifyContent: 'space-between',
           alignItems: 'center',
+          gap: '16px',
+          marginBottom: '32px',
+          paddingTop: '16px'
+        }}>
+          <button
+            onClick={() => onNavigate('dashboard')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              backgroundColor: 'transparent',
+              border: 'none',
+              color: '#1E88E5',
+              fontSize: '14px',
+              cursor: 'pointer',
+              padding: '8px 0'
+            }}
+          >
+            ← Back to Dashboard
+          </button>
+          <h1 style={{
+            fontSize: '28px',
+            fontWeight: '600',
+            color: '#333',
+            margin: 0
+          }}>
+            Your Risk Assessment
+          </h1>
+        </div>
+
+        {/* Main Content Grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '24px',
           marginBottom: '32px'
         }}>
-          <div>
-            <h1 style={{
-              fontSize: '28px',
+          {/* Left Column - Risk Score Card */}
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '32px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            borderLeft: '4px solid #FFC107',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center'
+          }}>
+            <div style={{
+              width: '120px',
+              height: '120px',
+              borderRadius: '50%',
+              backgroundColor: '#E3F2FD',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '24px',
+              position: 'relative'
+            }}>
+              <span style={{
+                fontSize: '36px',
+                fontWeight: '700',
+                color: '#1E88E5'
+              }}>
+                {assessmentData?.riskScore || 0}
+              </span>
+            </div>
+            
+            <h2 style={{
+              fontSize: '24px',
+              fontWeight: '600',
+              color: '#333',
+              margin: '0 0 8px 0',
+              textTransform: 'capitalize'
+            }}>
+              {assessmentData?.riskLevel || 'Unknown'} Risk
+            </h2>
+            
+            <p style={{
+              fontSize: '16px',
+              color: '#666',
+              margin: 0,
+              lineHeight: '1.5'
+            }}>
+              {assessmentData?.riskLevel === 'low' && 'Your current health metrics indicate low risk. Keep up the good work!'}
+              {assessmentData?.riskLevel === 'medium' && 'Your health metrics show moderate risk. Consider making some lifestyle adjustments.'}
+              {assessmentData?.riskLevel === 'high' && 'Your health metrics indicate high risk. Please consult with a healthcare professional.'}
+            </p>
+          </div>
+
+          {/* Right Column - Contributing Factors */}
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+          }}>
+            <h3 style={{
+              fontSize: '18px',
+              fontWeight: '600',
+              color: '#333',
+              marginBottom: '16px'
+            }}>
+              Contributing Factors
+            </h3>
+            
+            {assessmentData?.mainFactors && assessmentData.mainFactors.length > 0 ? (
+              <ul style={{ padding: 0, margin: 0, listStyle: 'none' }}>
+                {assessmentData.mainFactors.map((factor, index) => (
+                  <li key={index} style={{
+                    padding: '8px 0',
+                    borderBottom: index < assessmentData.mainFactors.length - 1 ? '1px solid #e0e0e0' : 'none',
+                    fontSize: '14px',
+                    color: '#666'
+                  }}>
+                    • {factor}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p style={{
+                fontSize: '14px',
+                color: '#666',
+                margin: 0,
+                fontStyle: 'italic'
+              }}>
+                No specific risk factors identified
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Understanding Your Assessment Section */}
+        <div style={{
+          backgroundColor: 'white',
+          borderRadius: '12px',
+          padding: '24px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          marginBottom: '32px'
+        }}>
+          <h3 style={{
+            fontSize: '18px',
+            fontWeight: '600',
+            color: '#333',
+            marginBottom: '16px'
+          }}>
+            Understanding Your Assessment
+          </h3>
+          
+          <p style={{
+            fontSize: '14px',
+            color: '#666',
+            marginBottom: '16px',
+            lineHeight: '1.5'
+          }}>
+            Your risk score is calculated based on your health metrics, lifestyle factors, and medical history. 
+            This assessment helps you understand your current health status and provides personalized recommendations.
+          </p>
+          
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '16px'
+          }}>
+            <div style={{
+              padding: '12px',
+              border: '1px solid #e0e0e0',
+              borderRadius: '8px',
+              textAlign: 'center'
+            }}>
+              <div style={{
+                fontSize: '18px',
+                fontWeight: '600',
+                color: '#4CAF50',
+                marginBottom: '4px'
+              }}>
+                Low Risk
+              </div>
+              <div style={{ fontSize: '14px', color: '#666' }}>
+                0–39
+              </div>
+            </div>
+            
+            <div style={{
+              padding: '12px',
+              border: '1px solid #e0e0e0',
+              borderRadius: '8px',
+              textAlign: 'center'
+            }}>
+              <div style={{
+                fontSize: '18px',
+                fontWeight: '600',
+                color: '#FF9800',
+                marginBottom: '4px'
+              }}>
+                Medium Risk
+              </div>
+              <div style={{ fontSize: '14px', color: '#666' }}>
+                40–69
+              </div>
+            </div>
+            
+            <div style={{
+              padding: '12px',
+              border: '1px solid #e0e0e0',
+              borderRadius: '8px',
+              textAlign: 'center'
+            }}>
+              <div style={{
+                fontSize: '18px',
+                fontWeight: '600',
+                color: '#F44336',
+                marginBottom: '4px'
+              }}>
+                High Risk
+              </div>
+              <div style={{ fontSize: '14px', color: '#666' }}>
+                70–100
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Cards */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '24px',
+          marginBottom: '32px'
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            textAlign: 'center',
+            cursor: 'pointer',
+            transition: 'transform 0.2s',
+            ':hover': { transform: 'translateY(-2px)' }
+          }}
+          onClick={() => onNavigate('assistant')} // Assuming assistant page has recommendations
+          >
+            <div style={{
+              width: '48px',
+              height: '48px',
+              backgroundColor: '#E3F2FD',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 16px auto'
+            }}>
+              📋
+            </div>
+            <h4 style={{
+              fontSize: '16px',
               fontWeight: '600',
               color: '#333',
               margin: '0 0 8px 0'
             }}>
-              Assessment History
-            </h1>
+              View Recommendations
+            </h4>
             <p style={{
-              fontSize: '16px',
+              fontSize: '14px',
               color: '#666',
               margin: 0
             }}>
-              Track your risk assessments over time
+              Get personalized health recommendations based on your assessment
             </p>
           </div>
-          <button
-            onClick={handleRunNewAssessment}
-            style={{
-              padding: '12px 20px',
-              backgroundColor: '#1E88E5',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer'
-            }}
+
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            textAlign: 'center',
+            cursor: 'pointer',
+            transition: 'transform 0.2s',
+            ':hover': { transform: 'translateY(-2px)' }
+          }}
+          onClick={handleRunNewAssessment}
           >
-            Run New Assessment
-          </button>
+            <div style={{
+              width: '48px',
+              height: '48px',
+              backgroundColor: '#E8F5E8',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 16px auto'
+            }}>
+              🔄
+            </div>
+            <h4 style={{
+              fontSize: '16px',
+              fontWeight: '600',
+              color: '#333',
+              margin: '0 0 8px 0'
+            }}>
+              Run New Assessment
+            </h4>
+            <p style={{
+              fontSize: '14px',
+              color: '#666',
+              margin: 0
+            }}>
+              Recalculate your risk score with the latest health data
+            </p>
+          </div>
         </div>
 
         {/* Charts Section */}
@@ -310,118 +589,6 @@ const Assessments = ({ onNavigate, assessmentHistory, onRunNewAssessment }) => {
               yAxisLabels={['High', 'Medium', 'Low']}
             />
           </div>
-        </div>
-
-        {/* All Assessments Table */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '24px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-        }}>
-          <h2 style={{
-            fontSize: '18px',
-            fontWeight: '600',
-            color: '#333',
-            marginBottom: '20px'
-          }}>
-            All Assessments
-          </h2>
-          
-          {assessmentHistory && assessmentHistory.length > 0 ? (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid #e0e0e0' }}>
-                    <th style={{
-                      textAlign: 'left',
-                      padding: '12px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      color: '#333'
-                    }}>
-                      Date
-                    </th>
-                    <th style={{
-                      textAlign: 'left',
-                      padding: '12px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      color: '#333'
-                    }}>
-                      Risk Score
-                    </th>
-                    <th style={{
-                      textAlign: 'left',
-                      padding: '12px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      color: '#333'
-                    }}>
-                      Risk Level
-                    </th>
-                    <th style={{
-                      textAlign: 'left',
-                      padding: '12px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      color: '#333'
-                    }}>
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {assessmentHistory.slice().reverse().map((assessment, index) => (
-                    <tr key={index} style={{ borderBottom: '1px solid #e0e0e0' }}>
-                      <td style={{ padding: '12px', fontSize: '14px', color: '#333' }}>
-                        {assessment.date}
-                      </td>
-                      <td style={{ padding: '12px', fontSize: '14px', color: '#333' }}>
-                        {assessment.riskScore}
-                      </td>
-                      <td style={{ padding: '12px' }}>
-                        <span style={{
-                          padding: '4px 12px',
-                          borderRadius: '20px',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          color: 'white',
-                          backgroundColor: getRiskLevelColor(assessment.riskLevel),
-                          textTransform: 'capitalize'
-                        }}>
-                          {assessment.riskLevel}
-                        </span>
-                      </td>
-                      <td style={{ padding: '12px' }}>
-                        <button style={{
-                          padding: '6px 12px',
-                          backgroundColor: 'transparent',
-                          color: '#1E88E5',
-                          border: '1px solid #1E88E5',
-                          borderRadius: '4px',
-                          fontSize: '12px',
-                          cursor: 'pointer'
-                        }}>
-                          View Details
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div style={{
-              border: '2px dashed #ddd',
-              borderRadius: '8px',
-              padding: '40px',
-              textAlign: 'center',
-              color: '#666'
-            }}>
-              No assessments completed yet. Run your first assessment to see your health insights.
-            </div>
-          )}
         </div>
 
         {/* Disclaimer */}
