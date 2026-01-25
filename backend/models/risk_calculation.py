@@ -26,5 +26,6 @@ class RiskCalculation(Base):
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow)
     
-    # Relationship
+    # Relationships
     user = relationship("User", back_populates="risk_calculations")
+    explanation = relationship("Explanation", back_populates="risk_calculation", uselist=False)

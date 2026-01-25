@@ -53,14 +53,50 @@ def test_database():
         raise HTTPException(status_code=500, detail=f"Database connection failed: {str(e)}")
     
 @app.post("/explain")
-def explain_risk(risk_data: dict):
-    explanation = generate_explanation(risk_data)
-    summary = generate_summary(risk_data)
-    return {
-        "risk_level": risk_data.get("risk_level"),
-        "summary": summary,
-        "explanation": explanation
-    }
+def explain_risk(risk_data: dict, db: Session = Depends(get_db)):
+    from models import RiskCalculation, Explanation
+    
+    # Get risk_calculation_id from request
+    risk_calculation_id = risk_data.get("risk_calculation_id")
+    
+    if risk_calculation_id:
+        # Check if risk calculation exists
+        risk_calc = db.query(RiskCalculation).filter(RiskCalculation.id == risk_calculation_id).first()
+        if not risk_calc:
+            raise HTTPException(status_code=404, detail="Risk calculation not found")
+        
+        # Generate explanation
+        explanation_list = generate_explanation(risk_data)
+        explanation_text = "\n\n".join(explanation_list)  # Join list into string
+        summary = generate_summary(risk_data)
+        
+        # Save explanation linked to risk calculation
+        explanation = Explanation(
+            risk_calculation_id=risk_calculation_id,
+            summary=summary,
+            detailed_explanation=explanation_text,
+            explanation_type="diabetes"
+        )
+        
+        db.add(explanation)
+        db.commit()
+        
+        return {
+            "risk_level": risk_data.get("risk_level"),
+            "summary": summary,
+            "explanation": explanation_text,
+            "explanation_id": explanation.id,
+            "linked_to_calculation": risk_calculation_id
+        }
+    else:
+        # Original behavior - just generate explanation without saving
+        explanation = generate_explanation(risk_data)
+        summary = generate_summary(risk_data)
+        return {
+            "risk_level": risk_data.get("risk_level"),
+            "summary": summary,
+            "explanation": explanation
+        }
 
 @app.post("/explain-cardiac")
 def explain_cardiac_risk(risk_data: dict):
@@ -152,6 +188,27 @@ def get_cardiac_recommendations(risk_data: dict):
         "risk_level": risk_data.get("risk_level"),
         "recommendations_count": len(recommendations),
         "recommendations": recommendations
+    }
+
+@app.get("/latest-explanation")
+def get_latest_explanation(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    from models import Explanation, RiskCalculation
+    
+    # Get the most recent explanation for the current user
+    explanation = db.query(Explanation).join(RiskCalculation).filter(
+        RiskCalculation.user_id == current_user.id
+    ).order_by(Explanation.created_at.desc()).first()
+    
+    if not explanation:
+        raise HTTPException(status_code=404, detail="No explanation found")
+    
+    return {
+        "id": explanation.id,
+        "summary": explanation.summary,
+        "detailed_explanation": explanation.detailed_explanation,
+        "explanation_type": explanation.explanation_type,
+        "created_at": explanation.created_at.isoformat(),
+        "risk_calculation_id": explanation.risk_calculation_id
     }
 
 @app.get("/risk-history")

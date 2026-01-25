@@ -38,8 +38,8 @@ def calculate_risk(data: RiskInput):
 
 @router.post("/metrics")
 def metrics(data: RiskInput, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    from models import RiskCalculation
-    from auth.jwt_auth import get_current_user
+    from models import RiskCalculation, Explanation
+    from explanations.diabetes_explanation import generate_explanation, generate_summary
     
     # Calculate risk
     result = calculate_risk_score(
@@ -57,7 +57,7 @@ def metrics(data: RiskInput, current_user: User = Depends(get_current_user), db:
         physical_activity=data.physical_activity
     )
     
-    # Save to database
+    # Save risk calculation to database
     risk_calc = RiskCalculation(
         user_id=current_user.id,
         calculation_type="diabetes",
@@ -73,6 +73,20 @@ def metrics(data: RiskInput, current_user: User = Depends(get_current_user), db:
     db.add(risk_calc)
     db.commit()
     db.refresh(risk_calc)
+    
+    # Generate and save explanation
+    summary = generate_summary(result)
+    explanation_text = generate_explanation(result)
+    
+    explanation = Explanation(
+        risk_calculation_id=risk_calc.id,
+        summary=summary,
+        detailed_explanation=explanation_text,
+        explanation_type="diabetes"
+    )
+    
+    db.add(explanation)
+    db.commit()
     
     # Add calculation ID to response
     result["calculation_id"] = risk_calc.id

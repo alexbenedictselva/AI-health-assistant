@@ -1,8 +1,81 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const Assessments = ({ assessmentData, assessmentHistory, onRunNewAssessment }) => {
   const navigate = useNavigate();
+  const [latestAssessment, setLatestAssessment] = useState(null);
+  const [explanation, setExplanation] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchLatestAssessment();
+  }, []);
+
+  const fetchLatestAssessment = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Fetch risk history
+      const response = await fetch('http://localhost:8000/risk-history', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.calculations && data.calculations.length > 0) {
+          const latest = data.calculations[data.calculations.length - 1];
+          setLatestAssessment(latest);
+        }
+      }
+      
+      // Fetch latest explanation
+      const explanationResponse = await fetch('http://localhost:8000/latest-explanation', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (explanationResponse.ok) {
+        const explanationData = await explanationResponse.json();
+        setExplanation(explanationData);
+      }
+      
+    } catch (error) {
+      console.error('Error fetching assessment:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getRiskColor = (riskLevel) => {
+    switch (riskLevel?.toLowerCase()) {
+      case 'low risk':
+        return '#4CAF50';
+      case 'moderate risk':
+        return '#FF9800';
+      case 'high risk':
+      case 'critical risk':
+        return '#F44336';
+      default:
+        return '#1E88E5';
+    }
+  };
+
+  const getRiskDescription = (riskLevel) => {
+    switch (riskLevel?.toLowerCase()) {
+      case 'low risk':
+        return 'Your current health metrics indicate low risk. Keep up the good work!';
+      case 'moderate risk':
+        return 'Your health metrics show moderate risk. Consider making some lifestyle adjustments.';
+      case 'high risk':
+      case 'critical risk':
+        return 'Your health metrics indicate high risk. Please consult with a healthcare professional.';
+      default:
+        return 'Assessment data not available.';
+    }
+  };
   const NavigationBar = () => (
     <div style={{
       backgroundColor: 'white',
@@ -259,52 +332,65 @@ const Assessments = ({ assessmentData, assessmentHistory, onRunNewAssessment }) 
             borderRadius: '12px',
             padding: '32px',
             boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            borderLeft: '4px solid #FFC107',
+            borderLeft: `4px solid ${getRiskColor(latestAssessment?.risk_level)}`,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             textAlign: 'center'
           }}>
-            <div style={{
-              width: '120px',
-              height: '120px',
-              borderRadius: '50%',
-              backgroundColor: '#E3F2FD',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: '24px',
-              position: 'relative'
-            }}>
-              <span style={{
-                fontSize: '36px',
-                fontWeight: '700',
-                color: '#1E88E5'
-              }}>
-                {assessmentData?.riskScore || 0}
-              </span>
-            </div>
-            
-            <h2 style={{
-              fontSize: '24px',
-              fontWeight: '600',
-              color: '#333',
-              margin: '0 0 8px 0',
-              textTransform: 'capitalize'
-            }}>
-              {assessmentData?.riskLevel || 'Unknown'} Risk
-            </h2>
-            
-            <p style={{
-              fontSize: '16px',
-              color: '#666',
-              margin: 0,
-              lineHeight: '1.5'
-            }}>
-              {assessmentData?.riskLevel === 'low' && 'Your current health metrics indicate low risk. Keep up the good work!'}
-              {assessmentData?.riskLevel === 'medium' && 'Your health metrics show moderate risk. Consider making some lifestyle adjustments.'}
-              {assessmentData?.riskLevel === 'high' && 'Your health metrics indicate high risk. Please consult with a healthcare professional.'}
-            </p>
+            {loading ? (
+              <div style={{ padding: '40px', color: '#666' }}>Loading assessment...</div>
+            ) : (
+              <>
+                <div style={{
+                  width: '120px',
+                  height: '120px',
+                  borderRadius: '50%',
+                  backgroundColor: '#E3F2FD',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '24px',
+                  position: 'relative'
+                }}>
+                  <span style={{
+                    fontSize: '36px',
+                    fontWeight: '700',
+                    color: getRiskColor(latestAssessment?.risk_level)
+                  }}>
+                    {latestAssessment?.risk_score || 0}
+                  </span>
+                </div>
+                
+                <h2 style={{
+                  fontSize: '24px',
+                  fontWeight: '600',
+                  color: '#333',
+                  margin: '0 0 8px 0'
+                }}>
+                  {latestAssessment?.risk_level || 'No Assessment'}
+                </h2>
+                
+                <p style={{
+                  fontSize: '16px',
+                  color: '#666',
+                  margin: 0,
+                  lineHeight: '1.5'
+                }}>
+                  {getRiskDescription(latestAssessment?.risk_level)}
+                </p>
+                
+                {latestAssessment?.created_at && (
+                  <p style={{
+                    fontSize: '14px',
+                    color: '#999',
+                    margin: '16px 0 0 0'
+                  }}>
+                    Assessed on {new Date(latestAssessment.created_at).toLocaleDateString()}
+                  </p>
+                )}
+              </>
+            )}
           </div>
 
           {/* Right Column - Contributing Factors */}
@@ -320,33 +406,101 @@ const Assessments = ({ assessmentData, assessmentHistory, onRunNewAssessment }) 
               color: '#333',
               marginBottom: '16px'
             }}>
-              Contributing Factors
+              Risk Breakdown
             </h3>
             
-            {assessmentData?.mainFactors && assessmentData.mainFactors.length > 0 ? (
-              <ul style={{ padding: 0, margin: 0, listStyle: 'none' }}>
-                {assessmentData.mainFactors.map((factor, index) => (
-                  <li key={index} style={{
-                    padding: '8px 0',
-                    borderBottom: index < assessmentData.mainFactors.length - 1 ? '1px solid #e0e0e0' : 'none',
-                    fontSize: '14px',
-                    color: '#666'
-                  }}>
-                    • {factor}
-                  </li>
-                ))}
-              </ul>
+            {latestAssessment?.breakdown ? (
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginBottom: '8px',
+                  fontSize: '14px'
+                }}>
+                  <span>Immediate Glycemic Risk:</span>
+                  <span style={{ fontWeight: '600' }}>{latestAssessment.breakdown.immediate_glycemic_risk}</span>
+                </div>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginBottom: '8px',
+                  fontSize: '14px'
+                }}>
+                  <span>Treatment & Symptoms:</span>
+                  <span style={{ fontWeight: '600' }}>{latestAssessment.breakdown.treatment_symptom_risk}</span>
+                </div>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginBottom: '8px',
+                  fontSize: '14px'
+                }}>
+                  <span>Baseline Vulnerability:</span>
+                  <span style={{ fontWeight: '600' }}>{latestAssessment.breakdown.baseline_vulnerability_risk}</span>
+                </div>
+              </div>
             ) : (
-              <p style={{
-                fontSize: '14px',
-                color: '#666',
-                margin: 0,
-                fontStyle: 'italic'
-              }}>
-                No specific risk factors identified
-              </p>
+              explanation ? (
+                <div style={{
+                  fontSize: '14px',
+                  color: '#666',
+                  lineHeight: '1.6',
+                  whiteSpace: 'pre-line',
+                  maxHeight: '200px',
+                  overflowY: 'auto'
+                }}>
+                  {explanation.detailed_explanation}
+                </div>
+              ) : (
+                <p style={{
+                  fontSize: '14px',
+                  color: '#666',
+                  margin: 0,
+                  fontStyle: 'italic'
+                }}>
+                  No assessment data available
+                </p>
+              )
             )}
           </div>
+        </div>
+
+        {/* Risk Explanation Section */}
+        <div style={{
+          backgroundColor: 'white',
+          borderRadius: '12px',
+          padding: '24px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          marginBottom: '32px'
+        }}>
+          <h3 style={{
+            fontSize: '18px',
+            fontWeight: '600',
+            color: '#333',
+            marginBottom: '16px'
+          }}>
+            Risk Explanation
+          </h3>
+          
+          {explanation ? (
+            <div style={{
+              fontSize: '14px',
+              color: '#666',
+              lineHeight: '1.6',
+              whiteSpace: 'pre-line'
+            }}>
+              {explanation.detailed_explanation}
+            </div>
+          ) : (
+            <p style={{
+              fontSize: '14px',
+              color: '#666',
+              margin: 0,
+              fontStyle: 'italic'
+            }}>
+              No explanation available for this assessment
+            </p>
+          )}
         </div>
 
         {/* Understanding Your Assessment Section */}
