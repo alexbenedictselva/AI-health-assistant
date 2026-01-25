@@ -2,6 +2,9 @@ from pydantic import BaseModel
 from typing import Optional
 
 class CardiacRiskInput(BaseModel):
+    # -------- USER REFERENCE --------
+    user_id: int
+    
     # Immediate cardiac symptoms
     chest_pain: str  # "none", "sometimes", "severe"
     shortness_of_breath: str  # "none", "exertion", "rest"

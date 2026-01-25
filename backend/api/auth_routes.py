@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from database import SessionLocal
-from models import User
-from auth import hash_password, verify_password, create_access_token
+from models.user import User
+from auth.auth_utils import hash_password, verify_password, create_access_token
 
 router = APIRouter()
 
@@ -60,21 +60,6 @@ def login(data: LoginInput, db: Session = Depends(get_db)):
         "token_type": "bearer"
     }
 
-@router.post("/debug-login")
-def debug_login(data: LoginInput, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == data.email).first()
-    
-    if not user:
-        return {"error": "User not found"}
-    
-    password_valid = verify_password(data.password, user.hashed_password)
-    
-    return {
-        "user_found": True,
-        "email": user.email,
-        "stored_hash": user.hashed_password[:20] + "...",
-        "password_valid": password_valid
-    }
 
 @router.get("/users")
 def get_users(db: Session = Depends(get_db)):

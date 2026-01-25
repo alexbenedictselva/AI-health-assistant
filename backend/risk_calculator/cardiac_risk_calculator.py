@@ -15,6 +15,7 @@ def calculate_cardiac_risk(data: dict):
     elif chest_pain == "sometimes":
         score += 10
         attribution["immediate"]["chest_pain"] = 10
+    
 
     breath = data.get("shortness_of_breath")
     if breath == "rest":
@@ -29,7 +30,7 @@ def calculate_cardiac_risk(data: dict):
         if heart_rate > 120:
             score += 10
             attribution["immediate"]["heart_rate"] = 10
-        elif heart_rate >= 100:
+        elif heart_rate > 100:
             score += 5
             attribution["immediate"]["heart_rate"] = 5
 
@@ -40,6 +41,9 @@ def calculate_cardiac_risk(data: dict):
     elif bp == "high":
         score += 5
         attribution["immediate"]["blood_pressure"] = 5
+    else:
+        score+=0
+        attribution["immediate"]["blood_pressure"] = 0
 
     # -------- Section 2: Lifestyle & Medical --------
 
@@ -50,6 +54,9 @@ def calculate_cardiac_risk(data: dict):
     elif smoking == "former":
         score += 5
         attribution["lifestyle"]["smoking"] = 5
+    else:
+        score+=0
+        attribution["lifestyle"]["smoking"] = 0
 
     activity = data.get("physical_activity")
     if activity == "never":
@@ -58,6 +65,9 @@ def calculate_cardiac_risk(data: dict):
     elif activity == "sometimes":
         score += 5
         attribution["lifestyle"]["activity"] = 5
+    else:
+        score+=0
+        attribution["lifestyle"]["activity"] = 0
 
     diet = data.get("diet")
     if diet == "high_fat":

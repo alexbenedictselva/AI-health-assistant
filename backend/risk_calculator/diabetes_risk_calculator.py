@@ -40,7 +40,7 @@ def calculate_risk_score(
         "improving": 0,
         "stable": 5,
         "worsening": 15
-    }[trend]
+    }.get(trend, 5)  # Default to stable if invalid
 
     immediate_glycemic_risk = glucose_points + trend_points
     total_score += immediate_glycemic_risk
@@ -52,19 +52,19 @@ def calculate_risk_score(
         "none": 0,
         "mild": 8,
         "severe": 15
-    }[symptoms]
+    }.get(symptoms, 0)
 
     medication_points = {
         "none": 0,
         "oral": 5,
         "insulin": 10
-    }[medication_type]
+    }.get(medication_type, 0)
 
     meal_points = {
         "low-carb": 0,
         "balanced": 2,
         "high-carb": 5
-    }[meal_type]
+    }.get(meal_type, 2)
 
     treatment_symptom_risk = symptom_points + medication_points + meal_points
     total_score += treatment_symptom_risk
@@ -77,7 +77,7 @@ def calculate_risk_score(
         "prediabetic": 4,
         "type2": 7,
         "type1": 10
-    }[diabetes_status]
+    }.get(diabetes_status, 0)  # Use .get() to handle invalid values
 
     if age < 30:
         age_points = 0
@@ -111,7 +111,7 @@ def calculate_risk_score(
         "active": 0,
         "sometimes": 2,
         "never": 5
-    }[physical_activity]
+    }.get(physical_activity, 2)
 
     baseline_risk = (
         diabetes_points +
@@ -149,6 +149,18 @@ def calculate_risk_score(
             "immediate_glycemic_percentage": round((immediate_glycemic_risk / total_score) * 100, 1) if total_score > 0 else 0,
             "treatment_symptom_percentage": round((treatment_symptom_risk / total_score) * 100, 1) if total_score > 0 else 0,
             "baseline_vulnerability_percentage": round((baseline_risk / total_score) * 100, 1) if total_score > 0 else 0
+        },
+        "detailed_breakdown": {
+            "glucose_points": glucose_points,
+            "trend_points": trend_points,
+            "symptom_points": symptom_points,
+            "medication_points": medication_points,
+            "meal_points": meal_points,
+            "diabetes_points": diabetes_points,
+            "age_points": age_points,
+            "bmi_points": bmi_points,
+            "family_points": family_points,
+            "activity_points": activity_points
         },
         "attribution": {
             "immediate_glycemic": {
