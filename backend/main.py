@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from sqlalchemy import text
 from database import engine, Base, SessionLocal
 from api import auth_router, risk_router
-from ExplanableAI.explanation_ai import generate_explanation, generate_summary
+from explanations.diabetes_explanation import generate_explanation, generate_summary
 
 # ---------- CREATE TABLES ----------
 Base.metadata.create_all(bind=engine)
@@ -44,7 +44,7 @@ def explain_risk(risk_data: dict):
 
 @app.post("/explain-cardiac")
 def explain_cardiac_risk(risk_data: dict):
-    from risk_calculator.cardiac_explanation_ai import generate_cardiac_explanation, generate_cardiac_summary
+    from explanations.cardiac_explanation import generate_cardiac_explanation, generate_cardiac_summary
     
     explanation = generate_cardiac_explanation(risk_data)
     summary = generate_cardiac_summary(risk_data)

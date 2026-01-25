@@ -10,7 +10,6 @@ def safe_get(d, path, default=None):
             return default
     return d
 
-
 def generate_summary(data: dict) -> str:
     """Generate a brief summary of the risk assessment"""
     risk_level = data.get("risk_level", "Unknown")
@@ -40,7 +39,6 @@ def generate_summary(data: dict) -> str:
         urgency = "Well managed"
     
     return f"{risk_level} (Score: {risk_score}). Primary concern: {main_factor} ({max_percentage}%). {urgency}."
-
 
 def generate_explanation(data: dict):
     explanation = []

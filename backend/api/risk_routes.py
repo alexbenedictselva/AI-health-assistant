@@ -3,7 +3,8 @@
 from fastapi import APIRouter
 from risk_calculator.model import RiskInput
 from risk_calculator.cardiac_model import CardiacRiskInput
-from risk_calculator.risk_calculator import calculate_risk_score
+from calculators.diabetes_calculator import calculate_risk_score
+from calculators.cardiac_calculator import calculate_cardiac_risk
 
 router = APIRouter()
 
