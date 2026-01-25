@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from database import engine, Base, SessionLocal
@@ -21,6 +22,15 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="AI Health Assistant – Glucose Risk API",
     version="1.0"
+)
+
+# ---------- CORS MIDDLEWARE ----------
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # ---------- INCLUDE ROUTERS ----------

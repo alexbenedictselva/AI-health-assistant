@@ -7,6 +7,8 @@ const Login = ({ onLogin }) => {
     email: '',
     password: ''
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -16,10 +18,46 @@ const Login = ({ onLogin }) => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Pass email to login handler - App.js will handle navigation
-    onLogin({ email: formData.email }, navigate);
+    setLoading(true);
+    setError('');
+    
+    try {
+      const response = await fetch('http://localhost:8000/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        localStorage.setItem('token', data.access_token);
+        localStorage.setItem('userEmail', formData.email);
+        
+        onLogin({ 
+          email: formData.email,
+          token: data.access_token,
+          user: data.user
+        }, navigate);
+      } else {
+        setError(data.detail || 'Login failed');
+      }
+    } catch (err) {
+      setError('Network error. Please check if the server is running.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDemoLogin = () => {
+    onLogin({ email: 'demo@vitacare.ai', fullName: 'Demo User' }, navigate);
   };
 
   return (
@@ -125,22 +163,56 @@ const Login = ({ onLogin }) => {
             </span>
           </div>
 
+          {error && (
+            <div style={{
+              backgroundColor: '#ffebee',
+              color: '#c62828',
+              padding: '10px',
+              borderRadius: '4px',
+              marginBottom: '20px',
+              fontSize: '14px',
+              textAlign: 'center'
+            }}>
+              {error}
+            </div>
+          )}
+
           <button
             type="submit"
+            disabled={loading}
             style={{
               width: '100%',
               padding: '12px',
-              backgroundColor: '#1E88E5',
+              backgroundColor: loading ? '#ccc' : '#1E88E5',
               color: 'white',
               border: 'none',
               borderRadius: '6px',
               fontSize: '16px',
               fontWeight: '600',
-              cursor: 'pointer',
+              cursor: loading ? 'not-allowed' : 'pointer',
               marginBottom: '15px'
             }}
           >
-            Login
+            {loading ? 'Logging in...' : 'Login'}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleDemoLogin}
+            style={{
+              width: '100%',
+              padding: '12px',
+              backgroundColor: 'transparent',
+              color: '#66BB6A',
+              border: '2px solid #66BB6A',
+              borderRadius: '6px',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              marginBottom: '20px'
+            }}
+          >
+            Continue as Demo User
           </button>
         </form>
 

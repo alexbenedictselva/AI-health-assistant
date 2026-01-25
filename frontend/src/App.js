@@ -76,19 +76,47 @@ function App() {
   const [completedExercises, setCompletedExercises] = useState([]);
 
   const handleLogin = (loginData, navigate) => {
-    // Find existing user by email
-    const existingUser = registeredUsers.find(user => user.email === loginData.email);
-    
-    if (existingUser && existingUser.profileCompleted) {
-      setUserProfile(existingUser);
+    // For demo login
+    if (loginData.email === 'demo@vitacare.ai') {
+      const demoUser = {
+        fullName: 'Demo User',
+        email: 'demo@vitacare.ai',
+        age: '30',
+        gender: 'Male',
+        healthCondition: 'diabetes',
+        activityLevel: 'medium',
+        dietQuality: 'Average',
+        smoking: 'No',
+        sleepQuality: 'Good',
+        profileCompleted: true
+      };
+      setUserProfile(demoUser);
       setTimeout(() => {
-        generateAssessment(existingUser);
+        generateAssessment(demoUser);
       }, 100);
       navigate('/dashboard');
-    } else {
-      // Show error - no account found or profile not completed
-      alert('No account found with this email or profile not completed. Please sign up first.');
+      return;
     }
+
+    // For real backend authentication - create basic profile
+    const userProfile = {
+      fullName: loginData.user?.name || 'User',
+      email: loginData.email,
+      age: '30',
+      gender: 'Male', 
+      healthCondition: 'none',
+      activityLevel: 'medium',
+      dietQuality: 'Average',
+      smoking: 'No',
+      sleepQuality: 'Good',
+      profileCompleted: true
+    };
+    
+    setUserProfile(userProfile);
+    setTimeout(() => {
+      generateAssessment(userProfile);
+    }, 100);
+    navigate('/dashboard');
   };
 
   const handleSignUp = (signupData, navigate) => {
