@@ -4,6 +4,7 @@ import Login from "./pages/Login";
 import HealthProfileSetup from "./pages/HealthProfileSetup";
 import Dashboard from "./pages/Dashboard";
 import HealthMetrics from "./pages/HealthMetrics";
+import AddMetric from "./pages/AddMetric";
 import Assessments from "./pages/Assessments";
 import Assistant from "./pages/Assistant";
 import Settings from "./pages/Settings";
@@ -15,23 +16,73 @@ function App() {
   // User profile state
   const [userProfile, setUserProfile] = useState(null);
   
+  // Simple user storage (in real app, this would be a database)
+  const [registeredUsers, setRegisteredUsers] = useState([
+    // Demo users for testing
+    {
+      fullName: 'John Smith',
+      email: 'john@example.com',
+      age: '32',
+      gender: 'Male',
+      healthCondition: 'diabetes',
+      activityLevel: 'medium',
+      dietQuality: 'Average',
+      smoking: 'No',
+      sleepQuality: 'Good'
+    },
+    {
+      fullName: 'Sarah Johnson',
+      email: 'sarah@example.com',
+      age: '28',
+      gender: 'Female',
+      healthCondition: 'cardiac',
+      activityLevel: 'high',
+      dietQuality: 'Healthy',
+      smoking: 'No',
+      sleepQuality: 'Excellent'
+    }
+  ]);
+  
   // Health metrics state
-  const [healthMetrics, setHealthMetrics] = useState([]);
+  const [healthMetrics, setHealthMetrics] = useState([
+    { id: 1, type: 'Blood Glucose', value: '95', unit: 'mg/dL', date: '12/1/2024' },
+    { id: 2, type: 'Blood Pressure', value: '118', unit: 'mmHg', date: '12/2/2024' },
+    { id: 3, type: 'Activity', value: '45', unit: 'minutes', date: '12/2/2024' },
+    { id: 4, type: 'Blood Glucose', value: '102', unit: 'mg/dL', date: '12/3/2024' },
+    { id: 5, type: 'Blood Pressure', value: '122', unit: 'mmHg', date: '12/4/2024' },
+    { id: 6, type: 'Activity', value: '60', unit: 'minutes', date: '12/4/2024' },
+    { id: 7, type: 'Blood Glucose', value: '88', unit: 'mg/dL', date: '12/5/2024' },
+    { id: 8, type: 'BMI', value: '23.5', unit: 'kg/m²', date: '12/5/2024' }
+  ]);
   
   // Assessment data state
   const [assessmentData, setAssessmentData] = useState(null);
   
   // Assessment history state
-  const [assessmentHistory, setAssessmentHistory] = useState([]);
+  const [assessmentHistory, setAssessmentHistory] = useState([
+    { riskScore: 65, riskLevel: 'medium', date: '11/15/2024' },
+    { riskScore: 58, riskLevel: 'medium', date: '11/22/2024' },
+    { riskScore: 52, riskLevel: 'medium', date: '11/29/2024' },
+    { riskScore: 48, riskLevel: 'low', date: '12/6/2024' }
+  ]);
 
   const handleNavigate = (page) => {
     setCurrentPage(page);
   };
 
   const handleLogin = (loginData) => {
-    // For existing users, set up a demo profile if none exists
-    if (!userProfile) {
-      setUserProfile({
+    // Find existing user by email
+    const existingUser = registeredUsers.find(user => user.email === loginData.email);
+    
+    if (existingUser) {
+      setUserProfile(existingUser);
+      // Generate initial assessment for existing user
+      setTimeout(() => {
+        generateAssessment(existingUser);
+      }, 100);
+    } else {
+      // For demo purposes, create a basic profile if user not found
+      const demoProfile = {
         fullName: loginData.fullName || 'Demo User',
         email: loginData.email,
         age: '35',
@@ -41,40 +92,48 @@ function App() {
         dietQuality: 'Average',
         smoking: 'No',
         sleepQuality: 'Good'
-      });
-      
-      // Generate initial assessment for existing user
+      };
+      setUserProfile(demoProfile);
       setTimeout(() => {
-        generateAssessment({
-          fullName: loginData.fullName || 'Demo User',
-          email: loginData.email,
-          age: '35',
-          gender: 'Other',
-          healthCondition: 'diabetes',
-          activityLevel: 'medium',
-          dietQuality: 'Average',
-          smoking: 'No',
-          sleepQuality: 'Good'
-        });
+        generateAssessment(demoProfile);
       }, 100);
     }
   };
 
   const handleSignUp = (signupData) => {
-    setUserProfile(prev => ({
-      ...prev,
+    const newUser = {
       fullName: signupData.fullName,
-      email: signupData.email
-    }));
+      email: signupData.email,
+      age: '',
+      gender: '',
+      healthCondition: '',
+      activityLevel: '',
+      dietQuality: '',
+      smoking: '',
+      sleepQuality: ''
+    };
+    
+    // Add to registered users
+    setRegisteredUsers(prev => [...prev, newUser]);
+    setUserProfile(newUser);
   };
 
   const handleCompleteProfile = (profileData) => {
-    setUserProfile(prev => ({
-      ...prev,
+    const updatedProfile = {
+      ...userProfile,
       ...profileData
-    }));
+    };
+    
+    // Update in registered users array
+    setRegisteredUsers(prev => 
+      prev.map(user => 
+        user.email === userProfile.email ? updatedProfile : user
+      )
+    );
+    
+    setUserProfile(updatedProfile);
     // Generate initial assessment based on profile
-    generateAssessment({ ...userProfile, ...profileData });
+    generateAssessment(updatedProfile);
   };
 
   const handleUpdateProfile = (updatedProfile) => {
@@ -204,6 +263,7 @@ function App() {
             assessmentData={assessmentData}
             onRunAssessment={handleRunAssessment}
             healthMetrics={healthMetrics}
+            assessmentHistory={assessmentHistory}
           />
         );
       case 'healthMetrics':
@@ -211,6 +271,13 @@ function App() {
           <HealthMetrics
             onNavigate={handleNavigate}
             healthMetrics={healthMetrics}
+            onAddMetric={handleAddMetric}
+          />
+        );
+      case 'addMetric':
+        return (
+          <AddMetric
+            onNavigate={handleNavigate}
             onAddMetric={handleAddMetric}
           />
         );

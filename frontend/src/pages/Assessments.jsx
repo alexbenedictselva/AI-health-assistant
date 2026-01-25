@@ -301,7 +301,11 @@ const Assessments = ({ onNavigate, assessmentHistory, onRunNewAssessment }) => {
               Risk Level Over Time
             </h2>
             <SimpleChart 
-              data={assessmentHistory?.map(a => ({ value: a.riskLevel, date: a.date }))}
+              data={assessmentHistory?.map(a => ({ 
+                value: a.riskScore >= 70 ? 'high' : a.riskScore >= 50 ? 'medium' : 'low', 
+                date: a.date,
+                score: a.riskScore 
+              }))}
               title="Tracking your risk category"
               yAxisLabels={['High', 'Medium', 'Low']}
             />

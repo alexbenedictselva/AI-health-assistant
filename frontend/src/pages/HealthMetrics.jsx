@@ -1,47 +1,28 @@
 import React, { useState } from 'react';
 
 const HealthMetrics = ({ onNavigate, healthMetrics, onAddMetric }) => {
-  const [showModal, setShowModal] = useState(false);
-  const [newMetric, setNewMetric] = useState({
-    type: 'Blood Glucose',
-    value: '',
-    unit: 'mg/dL'
-  });
+  const [metricFilter, setMetricFilter] = useState('All Metrics');
+  const [timeRange, setTimeRange] = useState('Last 30 days');
 
-  const metricUnits = {
-    'Blood Glucose': 'mg/dL',
-    'Blood Pressure': 'mmHg',
-    'BMI': 'kg/m²',
-    'Weight': 'kg',
-    'Heart Rate': 'bpm'
-  };
+  const filterOptions = ['All Metrics', 'Blood Glucose', 'Blood Pressure', 'Activity', 'BMI'];
+  const timeRangeOptions = ['Last 7 days', 'Last 30 days', 'Last 90 days'];
 
-  const handleMetricTypeChange = (type) => {
-    setNewMetric({
-      type,
-      value: '',
-      unit: metricUnits[type]
-    });
-  };
-
-  const handleSaveMetric = () => {
-    if (!newMetric.value) return;
+  const getFilteredMetrics = () => {
+    if (!healthMetrics) return [];
     
-    const metric = {
-      id: Date.now(),
-      type: newMetric.type,
-      value: newMetric.value,
-      unit: newMetric.unit,
-      date: new Date().toLocaleDateString()
-    };
+    let filtered = healthMetrics;
     
-    onAddMetric(metric);
-    setShowModal(false);
-    setNewMetric({
-      type: 'Blood Glucose',
-      value: '',
-      unit: 'mg/dL'
-    });
+    // Filter by metric type
+    if (metricFilter !== 'All Metrics') {
+      filtered = filtered.filter(m => m.type === metricFilter);
+    }
+    
+    // Filter by time range (simplified for demo)
+    const days = timeRange === 'Last 7 days' ? 7 : timeRange === 'Last 30 days' ? 30 : 90;
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+    
+    return filtered;
   };
 
   const NavigationBar = () => (
@@ -131,179 +112,87 @@ const HealthMetrics = ({ onNavigate, healthMetrics, onAddMetric }) => {
     </div>
   );
 
-  const Modal = () => (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000
-    }}>
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '12px',
-        padding: '24px',
-        width: '400px',
-        maxWidth: '90vw'
-      }}>
+  const TrendChart = ({ data, title, subtitle, color, normalValue, normalLabel }) => {
+    if (!data || data.length === 0) {
+      return (
         <div style={{
+          height: '200px',
           display: 'flex',
-          justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '20px'
+          justifyContent: 'center',
+          color: '#666',
+          border: '2px dashed #ddd',
+          borderRadius: '8px'
         }}>
-          <div>
-            <h2 style={{
-              fontSize: '20px',
-              fontWeight: '600',
-              color: '#333',
-              margin: '0 0 4px 0'
-            }}>
-              Add New Measurement
-            </h2>
-            <p style={{
-              fontSize: '14px',
-              color: '#666',
-              margin: 0
-            }}>
-              Record a new health data point
-            </p>
-          </div>
-          <button
-            onClick={() => setShowModal(false)}
-            style={{
-              background: 'none',
-              border: 'none',
-              fontSize: '20px',
-              cursor: 'pointer',
-              color: '#666'
-            }}
-          >
-            ✕
-          </button>
+          No data available
         </div>
+      );
+    }
 
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{
-            display: 'block',
-            marginBottom: '6px',
-            fontSize: '14px',
-            fontWeight: '500',
-            color: '#333'
-          }}>
-            Metric Type
-          </label>
-          <select
-            value={newMetric.type}
-            onChange={(e) => handleMetricTypeChange(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '12px',
-              border: '1px solid #ddd',
-              borderRadius: '6px',
-              fontSize: '14px',
-              boxSizing: 'border-box'
-            }}
-          >
-            {Object.keys(metricUnits).map(type => (
-              <option key={type} value={type}>{type}</option>
-            ))}
-          </select>
-        </div>
+    const chartWidth = 400;
+    const chartHeight = 150;
+    const padding = 40;
+    const maxValue = Math.max(...data.map(d => parseFloat(d.value)), normalValue || 0);
+    const minValue = Math.min(...data.map(d => parseFloat(d.value)), normalValue || 0) - 10;
 
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{
-            display: 'block',
-            marginBottom: '6px',
-            fontSize: '14px',
-            fontWeight: '500',
-            color: '#333'
-          }}>
-            Value
-          </label>
-          <input
-            type="number"
-            value={newMetric.value}
-            onChange={(e) => setNewMetric(prev => ({ ...prev, value: e.target.value }))}
-            placeholder="e.g. 120"
-            style={{
-              width: '100%',
-              padding: '12px',
-              border: '1px solid #ddd',
-              borderRadius: '6px',
-              fontSize: '14px',
-              boxSizing: 'border-box'
-            }}
+    return (
+      <div>
+        <svg width={chartWidth + padding * 2} height={chartHeight + padding * 2}>
+          {/* Grid lines */}
+          {[0, 1, 2, 3, 4].map(i => (
+            <line key={i} x1={padding} y1={padding + (chartHeight / 4) * i} x2={padding + chartWidth} y2={padding + (chartHeight / 4) * i} stroke="#f0f0f0" strokeWidth="1" />
+          ))}
+          
+          {/* Normal reference line */}
+          {normalValue && (
+            <g>
+              <line 
+                x1={padding} 
+                y1={padding + chartHeight - ((normalValue - minValue) / (maxValue - minValue)) * chartHeight}
+                x2={padding + chartWidth} 
+                y2={padding + chartHeight - ((normalValue - minValue) / (maxValue - minValue)) * chartHeight}
+                stroke="#ddd" 
+                strokeWidth="2" 
+                strokeDasharray="5,5" 
+              />
+              <text 
+                x={padding + chartWidth - 10} 
+                y={padding + chartHeight - ((normalValue - minValue) / (maxValue - minValue)) * chartHeight - 5}
+                textAnchor="end" 
+                fontSize="12" 
+                fill="#666"
+              >
+                {normalLabel}
+              </text>
+            </g>
+          )}
+          
+          {/* Chart line */}
+          <polyline
+            fill="none"
+            stroke={color}
+            strokeWidth="2"
+            points={data.map((point, i) => {
+              const x = padding + (chartWidth / (data.length - 1)) * i;
+              const y = padding + chartHeight - ((parseFloat(point.value) - minValue) / (maxValue - minValue)) * chartHeight;
+              return `${x},${y}`;
+            }).join(' ')}
           />
-        </div>
-
-        <div style={{ marginBottom: '24px' }}>
-          <label style={{
-            display: 'block',
-            marginBottom: '6px',
-            fontSize: '14px',
-            fontWeight: '500',
-            color: '#333'
-          }}>
-            Unit
-          </label>
-          <input
-            type="text"
-            value={newMetric.unit}
-            readOnly
-            style={{
-              width: '100%',
-              padding: '12px',
-              border: '1px solid #ddd',
-              borderRadius: '6px',
-              fontSize: '14px',
-              backgroundColor: '#f5f5f5',
-              boxSizing: 'border-box'
-            }}
-          />
-        </div>
-
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button
-            onClick={() => setShowModal(false)}
-            style={{
-              flex: 1,
-              padding: '12px',
-              backgroundColor: 'transparent',
-              color: '#666',
-              border: '1px solid #ddd',
-              borderRadius: '6px',
-              fontSize: '14px',
-              cursor: 'pointer'
-            }}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSaveMetric}
-            style={{
-              flex: 1,
-              padding: '12px',
-              backgroundColor: '#1E88E5',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer'
-            }}
-          >
-            Save Measurement
-          </button>
-        </div>
+          
+          {/* Data points */}
+          {data.map((point, i) => {
+            const x = padding + (chartWidth / (data.length - 1)) * i;
+            const y = padding + chartHeight - ((parseFloat(point.value) - minValue) / (maxValue - minValue)) * chartHeight;
+            return <circle key={i} cx={x} cy={y} r="4" fill={color} />;
+          })}
+        </svg>
       </div>
-    </div>
-  );
+    );
+  };
+
+  const filteredMetrics = getFilteredMetrics();
+  const glucoseData = filteredMetrics.filter(m => m.type === 'Blood Glucose');
+  const bpData = filteredMetrics.filter(m => m.type === 'Blood Pressure');
 
   return (
     <div style={{
@@ -318,6 +207,7 @@ const HealthMetrics = ({ onNavigate, healthMetrics, onAddMetric }) => {
         margin: '0 auto',
         padding: '0 24px'
       }}>
+        {/* Header */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -331,18 +221,18 @@ const HealthMetrics = ({ onNavigate, healthMetrics, onAddMetric }) => {
               color: '#333',
               margin: '0 0 8px 0'
             }}>
-              Health Metrics
+              Health Metrics Timeline
             </h1>
             <p style={{
               fontSize: '16px',
               color: '#666',
               margin: 0
             }}>
-              Track your vital signs and measurements
+              Track your health measurements over time
             </p>
           </div>
           <button
-            onClick={() => setShowModal(true)}
+            onClick={() => onNavigate('addMetric')}
             style={{
               padding: '12px 20px',
               backgroundColor: '#1E88E5',
@@ -351,107 +241,249 @@ const HealthMetrics = ({ onNavigate, healthMetrics, onAddMetric }) => {
               borderRadius: '6px',
               fontSize: '14px',
               fontWeight: '600',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
+              cursor: 'pointer'
             }}
           >
-            + Add Measurement
+            + Add Metric
           </button>
         </div>
 
+        {/* Filters */}
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: '2fr 1fr',
-          gap: '24px'
+          backgroundColor: 'white',
+          borderRadius: '12px',
+          padding: '24px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          marginBottom: '24px',
+          display: 'flex',
+          gap: '24px',
+          alignItems: 'center'
         }}>
-          {/* History Section */}
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            padding: '24px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-          }}>
-            <h2 style={{
-              fontSize: '20px',
-              fontWeight: '600',
-              color: '#333',
-              marginBottom: '20px'
+          <div>
+            <label style={{
+              display: 'block',
+              marginBottom: '8px',
+              fontSize: '14px',
+              fontWeight: '500',
+              color: '#333'
             }}>
-              History
-            </h2>
-            
-            {healthMetrics && healthMetrics.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {healthMetrics.slice(-10).reverse().map((metric) => (
-                  <div key={metric.id} style={{
-                    padding: '16px',
-                    border: '1px solid #e0e0e0',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}>
-                    <div>
-                      <span style={{ fontWeight: '600', color: '#333' }}>{metric.type}</span>
-                      <span style={{ color: '#666', marginLeft: '8px' }}>{metric.date}</span>
-                    </div>
-                    <span style={{ fontWeight: '600', color: '#1E88E5' }}>
-                      {metric.value} {metric.unit}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div style={{
-                border: '2px dashed #ddd',
-                borderRadius: '8px',
-                padding: '40px',
-                textAlign: 'center',
-                color: '#666'
-              }}>
-                No metrics recorded yet.
-              </div>
-            )}
+              Filter by metric
+            </label>
+            <select
+              value={metricFilter}
+              onChange={(e) => setMetricFilter(e.target.value)}
+              style={{
+                padding: '8px 12px',
+                border: '1px solid #ddd',
+                borderRadius: '6px',
+                fontSize: '14px',
+                minWidth: '150px'
+              }}
+            >
+              {filterOptions.map(option => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
           </div>
-
-          {/* Healthy Ranges Card */}
-          <div style={{
-            backgroundColor: '#66BB6A',
-            borderRadius: '12px',
-            padding: '24px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            color: 'white'
-          }}>
-            <h2 style={{
-              fontSize: '20px',
-              fontWeight: '600',
-              marginBottom: '20px',
-              color: 'white'
+          
+          <div>
+            <label style={{
+              display: 'block',
+              marginBottom: '8px',
+              fontSize: '14px',
+              fontWeight: '500',
+              color: '#333'
             }}>
-              Healthy Ranges
-            </h2>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <div style={{ fontWeight: '600', marginBottom: '4px' }}>Blood Glucose</div>
-                <div style={{ fontSize: '14px', opacity: 0.9 }}>70–140 mg/dL (Normal)</div>
-              </div>
-              <div>
-                <div style={{ fontWeight: '600', marginBottom: '4px' }}>Blood Pressure</div>
-                <div style={{ fontSize: '14px', opacity: 0.9 }}>120/80 mmHg (Normal)</div>
-              </div>
-              <div>
-                <div style={{ fontWeight: '600', marginBottom: '4px' }}>BMI</div>
-                <div style={{ fontSize: '14px', opacity: 0.9 }}>18.5–24.9 (Healthy)</div>
-              </div>
-            </div>
+              Time range
+            </label>
+            <select
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value)}
+              style={{
+                padding: '8px 12px',
+                border: '1px solid #ddd',
+                borderRadius: '6px',
+                fontSize: '14px',
+                minWidth: '150px'
+              }}
+            >
+              {timeRangeOptions.map(option => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
           </div>
         </div>
-      </div>
 
-      {showModal && <Modal />}
+        {/* Charts Section */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '24px',
+          marginBottom: '32px'
+        }}>
+          {/* Glucose Trend Chart */}
+          {(metricFilter === 'All Metrics' || metricFilter === 'Blood Glucose') && (
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '24px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+            }}>
+              <h3 style={{
+                fontSize: '18px',
+                fontWeight: '600',
+                color: '#333',
+                margin: '0 0 4px 0'
+              }}>
+                Glucose Trend
+              </h3>
+              <p style={{
+                fontSize: '14px',
+                color: '#666',
+                margin: '0 0 20px 0'
+              }}>
+                Blood glucose levels over time (mg/dL)
+              </p>
+              <TrendChart 
+                data={glucoseData}
+                title="Glucose Trend"
+                color="#1E88E5"
+                normalValue={100}
+                normalLabel="Normal (100 mg/dL)"
+              />
+            </div>
+          )}
+
+          {/* Blood Pressure Trend Chart */}
+          {(metricFilter === 'All Metrics' || metricFilter === 'Blood Pressure') && (
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '24px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+            }}>
+              <h3 style={{
+                fontSize: '18px',
+                fontWeight: '600',
+                color: '#333',
+                margin: '0 0 4px 0'
+              }}>
+                Blood Pressure Trend
+              </h3>
+              <p style={{
+                fontSize: '14px',
+                color: '#666',
+                margin: '0 0 20px 0'
+              }}>
+                Systolic blood pressure over time (mmHg)
+              </p>
+              <TrendChart 
+                data={bpData}
+                title="Blood Pressure Trend"
+                color="#E53935"
+                normalValue={120}
+                normalLabel="Normal (<120 mmHg)"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Measurements Table */}
+        <div style={{
+          backgroundColor: 'white',
+          borderRadius: '12px',
+          padding: '24px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        }}>
+          <div style={{ marginBottom: '20px' }}>
+            <h3 style={{
+              fontSize: '18px',
+              fontWeight: '600',
+              color: '#333',
+              margin: '0 0 4px 0'
+            }}>
+              All Measurements
+            </h3>
+            <p style={{
+              fontSize: '14px',
+              color: '#666',
+              margin: 0
+            }}>
+              Showing {filteredMetrics.length} measurements
+            </p>
+          </div>
+          
+          {filteredMetrics.length > 0 ? (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{
+                width: '100%',
+                borderCollapse: 'collapse'
+              }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #e0e0e0' }}>
+                    <th style={{
+                      padding: '12px',
+                      textAlign: 'left',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      color: '#333'
+                    }}>Date</th>
+                    <th style={{
+                      padding: '12px',
+                      textAlign: 'left',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      color: '#333'
+                    }}>Metric</th>
+                    <th style={{
+                      padding: '12px',
+                      textAlign: 'left',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      color: '#333'
+                    }}>Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredMetrics.slice().reverse().map((metric, index) => (
+                    <tr key={metric.id} style={{
+                      backgroundColor: index % 2 === 0 ? '#f9f9f9' : 'white',
+                      borderBottom: '1px solid #e0e0e0'
+                    }}>
+                      <td style={{
+                        padding: '12px',
+                        fontSize: '14px',
+                        color: '#333'
+                      }}>{metric.date}</td>
+                      <td style={{
+                        padding: '12px',
+                        fontSize: '14px',
+                        color: '#333'
+                      }}>{metric.type}</td>
+                      <td style={{
+                        padding: '12px',
+                        fontSize: '14px',
+                        color: '#333',
+                        fontWeight: '600'
+                      }}>{metric.value} {metric.unit}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div style={{
+              border: '2px dashed #ddd',
+              borderRadius: '8px',
+              padding: '40px',
+              textAlign: 'center',
+              color: '#666'
+            }}>
+              No measurements found for the selected filters.
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
