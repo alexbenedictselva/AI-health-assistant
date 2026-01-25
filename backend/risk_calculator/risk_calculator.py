@@ -1,172 +1,158 @@
-def calculate_risk_score(
-    glucose_value,
-    measurement_context,
-    trend,
-    symptoms,
-    medication_type,
-    meal_type,
-    diabetes_status,
-    age,
-    weight_kg,          # NEW
-    height_cm,          # NEW
-    family_history,
-    physical_activity
-):
-    total_score = 0
+def calculate_cardiac_risk(data: dict):
+    achieved_score = 0
+    max_possible_score = 0
 
-    # -----------------------------
-    # 1. IMMEDIATE GLYCEMIC RISK
-    # -----------------------------
-    if measurement_context == "fasting":
-        if glucose_value < 100:
-            glucose_points = 0
-        elif 100 <= glucose_value <= 125:
-            glucose_points = 8
-        elif 126 <= glucose_value <= 160:
-            glucose_points = 15
-        else:
-            glucose_points = 25
-    else:  # post-meal or random
-        if glucose_value < 140:
-            glucose_points = 0
-        elif 140 <= glucose_value <= 180:
-            glucose_points = 8
-        elif 181 <= glucose_value <= 250:
-            glucose_points = 15
-        else:
-            glucose_points = 25
+    attribution = {
+        "immediate": {},
+        "lifestyle": {},
+        "baseline": {}
+    }
 
-    trend_points = {
-        "improving": 0,
-        "stable": 5,
-        "worsening": 15
-    }[trend]
+    def apply_rule(section, key, condition, points):
+        nonlocal achieved_score, max_possible_score
+        if condition:
+            achieved_score += points
+            attribution[section][key] = points
+        max_possible_score += points
 
-    immediate_glycemic_risk = glucose_points + trend_points
-    total_score += immediate_glycemic_risk
+    # -------------------------------
+    # Section 1: Immediate Cardiac Risk
+    # -------------------------------
 
-    # -----------------------------
-    # 2. TREATMENT & SYMPTOMS
-    # -----------------------------
-    symptom_points = {
-        "none": 0,
-        "mild": 8,
-        "severe": 15
-    }[symptoms]
+    chest_pain = data.get("chest_pain")
+    if chest_pain:
+        apply_rule("immediate", "chest_pain",
+                   chest_pain == "severe", 20)
+        apply_rule("immediate", "chest_pain",
+                   chest_pain == "sometimes", 10)
 
-    medication_points = {
-        "none": 0,
-        "oral": 5,
-        "insulin": 10
-    }[medication_type]
+    breath = data.get("shortness_of_breath")
+    if breath:
+        apply_rule("immediate", "breathlessness",
+                   breath == "rest", 15)
+        apply_rule("immediate", "breathlessness",
+                   breath == "exertion", 8)
 
-    meal_points = {
-        "low-carb": 0,
-        "balanced": 2,
-        "high-carb": 5
-    }[meal_type]
+    heart_rate = data.get("heart_rate")
+    if isinstance(heart_rate, (int, float)):
+        apply_rule("immediate", "heart_rate",
+                   heart_rate > 120, 10)
+        apply_rule("immediate", "heart_rate",
+                   100 <= heart_rate <= 120, 5)
 
-    treatment_symptom_risk = symptom_points + medication_points + meal_points
-    total_score += treatment_symptom_risk
+    bp = data.get("blood_pressure")
+    if bp:
+        apply_rule("immediate", "blood_pressure",
+                   bp == "very_high", 10)
+        apply_rule("immediate", "blood_pressure",
+                   bp == "high", 5)
 
-    # -----------------------------
-    # 3. BASELINE VULNERABILITY
-    # -----------------------------
-    diabetes_points = {
-        "non-diabetic": 0,
-        "prediabetic": 4,
-        "type2": 7,
-        "type1": 10
-    }[diabetes_status]
+    # -------------------------------
+    # Section 2: Lifestyle & Medical
+    # -------------------------------
 
-    if age < 30:
-        age_points = 0
-    elif age <= 45:
-        age_points = 2
+    smoking = data.get("smoking")
+    if smoking:
+        apply_rule("lifestyle", "smoking",
+                   smoking == "current", 10)
+        apply_rule("lifestyle", "smoking",
+                   smoking == "former", 5)
+
+    activity = data.get("physical_activity")
+    if activity:
+        apply_rule("lifestyle", "physical_activity",
+                   activity == "never", 10)
+        apply_rule("lifestyle", "physical_activity",
+                   activity == "sometimes", 5)
+
+    diet = data.get("diet")
+    if diet:
+        apply_rule("lifestyle", "diet",
+                   diet == "high_fat", 5)
+        apply_rule("lifestyle", "diet",
+                   diet == "mixed", 3)
+
+    if data.get("diabetes") is True:
+        apply_rule("lifestyle", "diabetes", True, 10)
+
+    cholesterol = data.get("cholesterol_level")
+    if cholesterol:
+        apply_rule("lifestyle", "cholesterol",
+                   cholesterol == "high", 10)
+        apply_rule("lifestyle", "cholesterol",
+                   cholesterol == "borderline", 5)
+
+    alcohol = data.get("alcohol_consumption")
+    if alcohol:
+        apply_rule("lifestyle", "alcohol",
+                   alcohol == "heavy", 7)
+        apply_rule("lifestyle", "alcohol",
+                   alcohol == "moderate", 3)
+
+    stress = data.get("stress_level")
+    if stress:
+        apply_rule("lifestyle", "stress",
+                   stress == "high", 8)
+        apply_rule("lifestyle", "stress",
+                   stress == "moderate", 4)
+
+    sleep = data.get("sleep_quality")
+    if sleep:
+        apply_rule("lifestyle", "sleep",
+                   sleep == "poor", 5)
+
+    # -------------------------------
+    # Section 3: Baseline Vulnerability
+    # -------------------------------
+
+    age = data.get("age")
+    if isinstance(age, int):
+        apply_rule("baseline", "age",
+                   age > 55, 10)
+        apply_rule("baseline", "age",
+                   40 <= age <= 55, 5)
+
+    bmi = data.get("bmi_category")
+    if bmi:
+        apply_rule("baseline", "bmi",
+                   bmi == "obese", 10)
+        apply_rule("baseline", "bmi",
+                   bmi == "overweight", 5)
+
+    if data.get("family_history") is True:
+        apply_rule("baseline", "family_history", True, 5)
+
+    if data.get("previous_heart_condition") is True:
+        apply_rule("baseline", "previous_condition", True, 15)
+
+    # -------------------------------
+    # Percentage Risk Calculation
+    # -------------------------------
+
+    if max_possible_score == 0:
+        risk_percentage = 0
     else:
-        age_points = 5
+        risk_percentage = round(
+            (achieved_score / max_possible_score) * 100, 2
+        )
 
-    # -----------------------------
-    # BMI CALCULATION (NEW)
-    # -----------------------------
-    height_m = height_cm / 100
-    bmi = weight_kg / (height_m ** 2)
+    # -------------------------------
+    # Risk Level Classification
+    # -------------------------------
 
-    if bmi < 18.5:
-        bmi_points = 0
-        bmi_category = "underweight"
-    elif bmi < 25:
-        bmi_points = 0
-        bmi_category = "normal"
-    elif bmi < 30:
-        bmi_points = 2
-        bmi_category = "overweight"
+    if risk_percentage <= 25:
+        level = "Low Risk"
+    elif risk_percentage <= 50:
+        level = "Moderate Risk"
+    elif risk_percentage <= 75:
+        level = "High Risk"
     else:
-        bmi_points = 5
-        bmi_category = "obese"
-
-    family_points = 5 if family_history else 0
-
-    activity_points = {
-        "active": 0,
-        "sometimes": 2,
-        "never": 5
-    }[physical_activity]
-
-    baseline_risk = (
-        diabetes_points +
-        age_points +
-        bmi_points +
-        family_points +
-        activity_points
-    )
-
-    total_score += baseline_risk
-    total_score = min(total_score, 100)
-
-    if total_score <= 25:
-        risk_level = "Low Risk"
-    elif total_score <= 50:
-        risk_level = "Moderate Risk"
-    elif total_score <= 75:
-        risk_level = "High Risk"
-    else:
-        risk_level = "Critical Risk"
+        level = "Critical Risk"
 
     return {
-        "risk_score": total_score,
-        "risk_level": risk_level,
-        "derived_metrics": {
-            "bmi": round(bmi, 2),
-            "bmi_category": bmi_category
-        },
-        "breakdown": {
-            "immediate_glycemic_risk": immediate_glycemic_risk,
-            "treatment_symptom_risk": treatment_symptom_risk,
-            "baseline_vulnerability_risk": baseline_risk
-        },
-        "percentage_breakdown": {
-            "immediate_glycemic_percentage": round((immediate_glycemic_risk / total_score) * 100, 1) if total_score > 0 else 0,
-            "treatment_symptom_percentage": round((treatment_symptom_risk / total_score) * 100, 1) if total_score > 0 else 0,
-            "baseline_vulnerability_percentage": round((baseline_risk / total_score) * 100, 1) if total_score > 0 else 0
-        },
-        "attribution": {
-            "immediate_glycemic": {
-                "glucose_context": measurement_context,
-                "glucose_value": glucose_value,
-                "trend": trend
-            },
-            "treatment_symptoms": {
-                "symptoms": symptoms,
-                "medication": medication_type,
-                "meal_type": meal_type
-            },
-            "baseline": {
-                "diabetes_status": diabetes_status,
-                "age": age,
-                "bmi_category": bmi_category,
-                "family_history": family_history,
-                "physical_activity": physical_activity
-            }
-        }
+        "risk_percentage": risk_percentage,
+        "risk_level": level,
+        "raw_score": achieved_score,
+        "max_possible_score": max_possible_score,
+        "attribution": attribution
     }

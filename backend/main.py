@@ -53,3 +53,83 @@ def explain_cardiac_risk(risk_data: dict):
         "summary": summary,
         "explanation": explanation
     }
+
+@app.post("/recommendations")
+def get_recommendations(risk_data: dict):
+    from recommendation.recommendations import generate_glucose_recommendations
+    
+    # Extract attribution data for recommendations
+    attribution = risk_data.get("attribution", {})
+    
+    # Flatten the data for the recommendation function
+    input_data = {}
+    
+    # Get immediate glycemic data
+    immediate = attribution.get("immediate_glycemic", {})
+    input_data.update({
+        "glucose_value": immediate.get("glucose_value"),
+        "measurement_context": immediate.get("glucose_context"),
+        "trend": immediate.get("trend")
+    })
+    
+    # Get treatment symptoms data
+    treatment = attribution.get("treatment_symptoms", {})
+    input_data.update({
+        "symptoms": treatment.get("symptoms"),
+        "meal_type": treatment.get("meal_type")
+    })
+    
+    # Get baseline data
+    baseline = attribution.get("baseline", {})
+    input_data.update({
+        "physical_activity": baseline.get("physical_activity"),
+        "bmi_category": baseline.get("bmi_category")
+    })
+    
+    recommendations = generate_glucose_recommendations(input_data)
+    
+    return {
+        "risk_level": risk_data.get("risk_level"),
+        "recommendations_count": len(recommendations),
+        "recommendations": recommendations
+    }
+
+@app.post("/cardiac-recommendations")
+def get_cardiac_recommendations(risk_data: dict):
+    from recommendation.recommendations import generate_cardiac_recommendations
+    
+    # Extract attribution data for cardiac recommendations
+    attribution = risk_data.get("attribution", {})
+    
+    # Flatten the data for the recommendation function
+    input_data = {}
+    
+    # Get immediate cardiac data
+    immediate = attribution.get("immediate", {})
+    input_data.update({
+        "chest_pain": "severe" if "chest_pain" in immediate else "none",
+        "shortness_of_breath": "rest" if "breathlessness" in immediate else "none",
+        "blood_pressure": "high" if "blood_pressure" in immediate else "normal"
+    })
+    
+    # Get lifestyle data
+    lifestyle = attribution.get("lifestyle", {})
+    input_data.update({
+        "smoking": "current" if "smoking" in lifestyle else "never",
+        "physical_activity": "never" if "activity" in lifestyle else "active",
+        "diet": "high_fat" if "diet" in lifestyle else "healthy"
+    })
+    
+    # Get baseline data
+    baseline = attribution.get("baseline", {})
+    input_data.update({
+        "bmi_category": "obese" if "bmi" in baseline else "normal"
+    })
+    
+    recommendations = generate_cardiac_recommendations(input_data)
+    
+    return {
+        "risk_level": risk_data.get("risk_level"),
+        "recommendations_count": len(recommendations),
+        "recommendations": recommendations
+    }
