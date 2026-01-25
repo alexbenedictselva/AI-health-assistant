@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import SignUp from "./pages/SignUp";
 import Login from "./pages/Login";
 import HealthProfileSetup from "./pages/HealthProfileSetup";
@@ -15,9 +16,6 @@ import ExerciseComplete from "./pages/Exercises/ExerciseComplete";
 import EditWorkout from "./pages/Exercises/EditWorkout";
 
 function App() {
-  // Navigation state - start with login for existing users
-  const [currentPage, setCurrentPage] = useState('login');
-  
   // User profile state
   const [userProfile, setUserProfile] = useState(null);
   
@@ -77,11 +75,7 @@ function App() {
   const [currentWorkout, setCurrentWorkout] = useState(null);
   const [completedExercises, setCompletedExercises] = useState([]);
 
-  const handleNavigate = (page) => {
-    setCurrentPage(page);
-  };
-
-  const handleLogin = (loginData) => {
+  const handleLogin = (loginData, navigate) => {
     // Find existing user by email
     const existingUser = registeredUsers.find(user => user.email === loginData.email);
     
@@ -90,14 +84,14 @@ function App() {
       setTimeout(() => {
         generateAssessment(existingUser);
       }, 100);
-      setCurrentPage('dashboard');
+      navigate('/dashboard');
     } else {
       // Show error - no account found or profile not completed
       alert('No account found with this email or profile not completed. Please sign up first.');
     }
   };
 
-  const handleSignUp = (signupData) => {
+  const handleSignUp = (signupData, navigate) => {
     const newUser = {
       fullName: signupData.fullName,
       email: signupData.email,
@@ -112,10 +106,10 @@ function App() {
     };
     
     setUserProfile(newUser);
-    setCurrentPage('profile');
+    navigate('/profile');
   };
 
-  const handleCompleteProfile = (profileData) => {
+  const handleCompleteProfile = (profileData, navigate) => {
     const updatedProfile = {
       ...userProfile,
       ...profileData,
@@ -127,7 +121,7 @@ function App() {
     
     setUserProfile(updatedProfile);
     generateAssessment(updatedProfile);
-    setCurrentPage('dashboard');
+    navigate('/dashboard');
   };
 
   const handleUpdateProfile = (updatedProfile) => {
@@ -139,7 +133,7 @@ function App() {
     generateAssessment({ ...userProfile, ...updatedProfile });
   };
 
-  const handleAddMetric = (metric) => {
+  const handleAddMetric = (metric, navigate) => {
     // Add metric to state
     const updatedMetrics = [...healthMetrics, metric];
     setHealthMetrics(updatedMetrics);
@@ -148,7 +142,7 @@ function App() {
     generateAssessmentWithMetrics(userProfile, updatedMetrics);
     
     // Navigate to assessments page to show updated risk
-    setCurrentPage('assessments');
+    navigate('/assessments');
   };
 
   const generateAssessmentWithMetrics = (profile, metrics) => {
@@ -324,110 +318,84 @@ function App() {
     }
   };
 
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'login':
-        return <Login onNavigate={handleNavigate} onLogin={handleLogin} />;
-      case 'signup':
-        return <SignUp onNavigate={handleNavigate} onSignUp={handleSignUp} />;
-      case 'profile':
-        return <HealthProfileSetup onNavigate={handleNavigate} onCompleteProfile={handleCompleteProfile} />;
-      case 'dashboard':
-        return (
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<Login onLogin={handleLogin} />} />
+        <Route path="/signup" element={<SignUp onSignUp={handleSignUp} />} />
+        <Route path="/profile" element={<HealthProfileSetup onCompleteProfile={handleCompleteProfile} />} />
+        <Route path="/dashboard" element={
           <Dashboard 
-            onNavigate={handleNavigate} 
             userProfile={userProfile}
             assessmentData={assessmentData}
             onRunAssessment={handleRunAssessment}
             healthMetrics={healthMetrics}
             assessmentHistory={assessmentHistory}
           />
-        );
-      case 'healthMetrics':
-        return (
+        } />
+        <Route path="/health-metrics" element={
           <HealthMetrics
-            onNavigate={handleNavigate}
             healthMetrics={healthMetrics}
             onAddMetric={handleAddMetric}
           />
-        );
-      case 'addMetric':
-        return (
+        } />
+        <Route path="/add-metric" element={
           <AddMetric
-            onNavigate={handleNavigate}
             onAddMetric={handleAddMetric}
           />
-        );
-      case 'exercises':
-        return (
+        } />
+        <Route path="/exercises" element={
           <ExercisesHome
-            onNavigate={handleNavigate}
             onStartWorkout={handleStartWorkout}
             userProfile={userProfile}
           />
-        );
-      case 'exerciseReady':
-        return (
+        } />
+        <Route path="/exercise-ready" element={
           <ExerciseReady
-            onNavigate={handleNavigate}
             currentWorkout={currentWorkout}
           />
-        );
-      case 'exerciseSession':
-        return (
+        } />
+        <Route path="/exercise-session" element={
           <ExerciseSession
-            onNavigate={handleNavigate}
             currentWorkout={currentWorkout}
             userProfile={userProfile}
             onCompleteExercise={handleCompleteExercise}
           />
-        );
-      case 'exerciseComplete':
-        return (
+        } />
+        <Route path="/exercise-complete" element={
           <ExerciseComplete
-            onNavigate={handleNavigate}
             completedExercises={completedExercises}
             currentWorkout={currentWorkout}
           />
-        );
-      case 'editWorkout':
-        return (
+        } />
+        <Route path="/edit-workout" element={
           <EditWorkout
-            onNavigate={handleNavigate}
             userProfile={userProfile}
           />
-        );
-      case 'assessments':
-        return (
+        } />
+        <Route path="/assessments" element={
           <Assessments
-            onNavigate={handleNavigate}
             assessmentData={assessmentData}
             assessmentHistory={assessmentHistory}
             onRunNewAssessment={handleRunNewAssessment}
           />
-        );
-      case 'assistant':
-        return (
+        } />
+        <Route path="/assistant" element={
           <Assistant 
-            onNavigate={handleNavigate}
             userProfile={userProfile}
             assessmentData={assessmentData}
           />
-        );
-      case 'settings':
-        return (
+        } />
+        <Route path="/settings" element={
           <Settings 
-            onNavigate={handleNavigate}
             userProfile={userProfile}
             onUpdateProfile={handleUpdateProfile}
           />
-        );
-      default:
-        return <Login onNavigate={handleNavigate} onLogin={handleLogin} />;
-    }
-  };
-
-  return renderPage();
+        } />
+      </Routes>
+    </Router>
+  );
 }
 
 export default App;

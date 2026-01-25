@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const Login = ({ onNavigate, onLogin }) => {
+const Login = ({ onLogin }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -17,12 +19,7 @@ const Login = ({ onNavigate, onLogin }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     // Pass email to login handler - App.js will handle navigation
-    onLogin({ email: formData.email });
-  };
-
-  const handleDemoLogin = () => {
-    onLogin({ email: 'demo@vitacare.ai', fullName: 'Demo User' });
-    onNavigate('dashboard');
+    onLogin({ email: formData.email }, navigate);
   };
 
   return (
@@ -145,25 +142,6 @@ const Login = ({ onNavigate, onLogin }) => {
           >
             Login
           </button>
-
-          <button
-            type="button"
-            onClick={handleDemoLogin}
-            style={{
-              width: '100%',
-              padding: '12px',
-              backgroundColor: 'transparent',
-              color: '#66BB6A',
-              border: '2px solid #66BB6A',
-              borderRadius: '6px',
-              fontSize: '16px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              marginBottom: '20px'
-            }}
-          >
-            Continue as Demo User
-          </button>
         </form>
 
         <p style={{
@@ -174,7 +152,7 @@ const Login = ({ onNavigate, onLogin }) => {
         }}>
           Don't have an account?{' '}
           <span
-            onClick={() => onNavigate('signup')}
+            onClick={() => navigate('/signup')}
             style={{
               color: '#1E88E5',
               cursor: 'pointer',

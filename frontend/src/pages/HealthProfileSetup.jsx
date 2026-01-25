@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const HealthProfileSetup = ({ onNavigate, onCompleteProfile }) => {
+const HealthProfileSetup = ({ onCompleteProfile }) => {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [profileData, setProfileData] = useState({
     age: '',
@@ -32,8 +34,7 @@ const HealthProfileSetup = ({ onNavigate, onCompleteProfile }) => {
   };
 
   const handleComplete = () => {
-    onCompleteProfile(profileData);
-    onNavigate('dashboard');
+    onCompleteProfile(profileData, navigate);
   };
 
   const StepIndicator = () => (

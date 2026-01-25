@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const HealthMetrics = ({ onNavigate, healthMetrics, onAddMetric }) => {
+const HealthMetrics = ({ healthMetrics, onAddMetric }) => {
+  const navigate = useNavigate();
   const [metricFilter, setMetricFilter] = useState('All Metrics');
   const [timeRange, setTimeRange] = useState('Last 30 days');
 
@@ -76,11 +78,11 @@ const HealthMetrics = ({ onNavigate, healthMetrics, onAddMetric }) => {
             <span
               key={tab}
               onClick={() => {
-                if (tab === 'Dashboard') onNavigate('dashboard');
-                else if (tab === 'Assessments') onNavigate('assessments');
-                else if (tab === 'Exercises') onNavigate('exercises');
-                else if (tab === 'Assistant') onNavigate('assistant');
-                else if (tab === 'Settings') onNavigate('settings');
+                if (tab === 'Dashboard') navigate('/dashboard');
+                else if (tab === 'Assessments') navigate('/assessments');
+                else if (tab === 'Exercises') navigate('/exercises');
+                else if (tab === 'Assistant') navigate('/assistant');
+                else if (tab === 'Settings') navigate('/settings');
               }}
               style={{
                 fontSize: '14px',
@@ -95,7 +97,7 @@ const HealthMetrics = ({ onNavigate, healthMetrics, onAddMetric }) => {
             </span>
           ))}
           <button
-            onClick={() => onNavigate('login')}
+            onClick={() => navigate('/login')}
             style={{
               padding: '6px 12px',
               backgroundColor: 'transparent',
@@ -233,7 +235,7 @@ const HealthMetrics = ({ onNavigate, healthMetrics, onAddMetric }) => {
             </p>
           </div>
           <button
-            onClick={() => onNavigate('addMetric')}
+            onClick={() => navigate('/add-metric')}
             style={{
               padding: '12px 20px',
               backgroundColor: '#1E88E5',

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const Settings = ({ onNavigate, userProfile, onUpdateProfile }) => {
+const Settings = ({ userProfile, onUpdateProfile }) => {
+  const navigate = useNavigate();
   const [profileForm, setProfileForm] = useState({
     fullName: userProfile?.fullName || '',
     email: userProfile?.email || '',
@@ -98,11 +100,12 @@ const Settings = ({ onNavigate, userProfile, onUpdateProfile }) => {
             <span
               key={tab}
               onClick={() => {
-                if (tab === 'Dashboard') onNavigate('dashboard');
-                else if (tab === 'Health Metrics') onNavigate('healthMetrics');
-                else if (tab === 'Assessments') onNavigate('assessments');
-                else if (tab === 'Exercises') onNavigate('exercises');
-                else if (tab === 'Assistant') onNavigate('assistant');
+                if (tab === 'Dashboard') navigate('/dashboard');
+                else if (tab === 'Health Metrics') navigate('/health-metrics');
+                else if (tab === 'Assessments') navigate('/assessments');
+                else if (tab === 'Exercises') navigate('/exercises');
+                else if (tab === 'Assistant') navigate('/assistant');
+                else if (tab === 'Settings') navigate('/settings');
               }}
               style={{
                 fontSize: '14px',
@@ -117,7 +120,7 @@ const Settings = ({ onNavigate, userProfile, onUpdateProfile }) => {
             </span>
           ))}
           <button
-            onClick={() => onNavigate('login')}
+            onClick={() => navigate('/login')}
             style={{
               padding: '6px 12px',
               backgroundColor: 'transparent',
@@ -456,7 +459,7 @@ const Settings = ({ onNavigate, userProfile, onUpdateProfile }) => {
             Sign out of your VitaCare AI account
           </p>
           <button
-            onClick={() => onNavigate('login')}
+            onClick={() => navigate('/login')}
             style={{
               padding: '12px 24px',
               backgroundColor: '#E53935',

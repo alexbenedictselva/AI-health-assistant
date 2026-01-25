@@ -1,6 +1,8 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const Assessments = ({ onNavigate, assessmentData, assessmentHistory, onRunNewAssessment }) => {
+const Assessments = ({ assessmentData, assessmentHistory, onRunNewAssessment }) => {
+  const navigate = useNavigate();
   const NavigationBar = () => (
     <div style={{
       backgroundColor: 'white',
@@ -52,11 +54,12 @@ const Assessments = ({ onNavigate, assessmentData, assessmentHistory, onRunNewAs
             <span
               key={tab}
               onClick={() => {
-                if (tab === 'Dashboard') onNavigate('dashboard');
-                else if (tab === 'Health Metrics') onNavigate('healthMetrics');
-                else if (tab === 'Exercises') onNavigate('exercises');
-                else if (tab === 'Assistant') onNavigate('assistant');
-                else if (tab === 'Settings') onNavigate('settings');
+                if (tab === 'Dashboard') navigate('/dashboard');
+                else if (tab === 'Health Metrics') navigate('/health-metrics');
+                else if (tab === 'Assessments') navigate('/assessments');
+                else if (tab === 'Exercises') navigate('/exercises');
+                else if (tab === 'Assistant') navigate('/assistant');
+                else if (tab === 'Settings') navigate('/settings');
               }}
               style={{
                 fontSize: '14px',
@@ -71,7 +74,7 @@ const Assessments = ({ onNavigate, assessmentData, assessmentHistory, onRunNewAs
             </span>
           ))}
           <button
-            onClick={() => onNavigate('login')}
+            onClick={() => navigate('/login')}
             style={{
               padding: '6px 12px',
               backgroundColor: 'transparent',
@@ -218,7 +221,7 @@ const Assessments = ({ onNavigate, assessmentData, assessmentHistory, onRunNewAs
           paddingTop: '16px'
         }}>
           <button
-            onClick={() => onNavigate('dashboard')}
+            onClick={() => navigate('/dashboard')}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -454,7 +457,7 @@ const Assessments = ({ onNavigate, assessmentData, assessmentHistory, onRunNewAs
             transition: 'transform 0.2s',
             ':hover': { transform: 'translateY(-2px)' }
           }}
-          onClick={() => onNavigate('assistant')} // Assuming assistant page has recommendations
+          onClick={() => navigate('/assistant')} // Assuming assistant page has recommendations
           >
             <div style={{
               width: '48px',

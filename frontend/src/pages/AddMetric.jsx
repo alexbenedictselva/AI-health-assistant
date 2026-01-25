@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const AddMetric = ({ onNavigate, onAddMetric }) => {
+const AddMetric = ({ onAddMetric }) => {
+  const navigate = useNavigate();
   const [newMetric, setNewMetric] = useState({
     type: 'Blood Glucose',
     value: '',
@@ -26,7 +28,7 @@ const AddMetric = ({ onNavigate, onAddMetric }) => {
       date: new Date(newMetric.date).toLocaleDateString()
     };
     
-    onAddMetric(metric);
+    onAddMetric(metric, navigate);
     // Navigation will be handled by App.js
   };
 
@@ -81,12 +83,12 @@ const AddMetric = ({ onNavigate, onAddMetric }) => {
             <span
               key={tab}
               onClick={() => {
-                if (tab === 'Dashboard') onNavigate('dashboard');
-                else if (tab === 'Health Metrics') onNavigate('healthMetrics');
-                else if (tab === 'Assessments') onNavigate('assessments');
-                else if (tab === 'Exercises') onNavigate('exercises');
-                else if (tab === 'Assistant') onNavigate('assistant');
-                else if (tab === 'Settings') onNavigate('settings');
+                if (tab === 'Dashboard') navigate('/dashboard');
+                else if (tab === 'Health Metrics') navigate('/health-metrics');
+                else if (tab === 'Assessments') navigate('/assessments');
+                else if (tab === 'Exercises') navigate('/exercises');
+                else if (tab === 'Assistant') navigate('/assistant');
+                else if (tab === 'Settings') navigate('/settings');
               }}
               style={{
                 fontSize: '14px',
@@ -101,7 +103,7 @@ const AddMetric = ({ onNavigate, onAddMetric }) => {
             </span>
           ))}
           <button
-            onClick={() => onNavigate('login')}
+            onClick={() => navigate('/login')}
             style={{
               padding: '6px 12px',
               backgroundColor: 'transparent',
@@ -133,7 +135,7 @@ const AddMetric = ({ onNavigate, onAddMetric }) => {
         padding: '0 24px'
       }}>
         <button
-          onClick={() => onNavigate('dashboard')}
+          onClick={() => navigate('/dashboard')}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -275,7 +277,7 @@ const AddMetric = ({ onNavigate, onAddMetric }) => {
             justifyContent: 'center'
           }}>
             <button
-              onClick={() => onNavigate('dashboard')}
+              onClick={() => navigate('/dashboard')}
               style={{
                 padding: '12px 24px',
                 backgroundColor: 'transparent',

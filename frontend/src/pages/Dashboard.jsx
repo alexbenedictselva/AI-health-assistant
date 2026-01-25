@@ -1,8 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import RiskScoreCard from '../components/RiskScoreCard';
 import CoachingMessage from '../components/CoachingMessage';
 
-const Dashboard = ({ onNavigate, userProfile, assessmentData, onRunAssessment, healthMetrics, assessmentHistory }) => {
+const Dashboard = ({ userProfile, assessmentData, onRunAssessment, healthMetrics, assessmentHistory }) => {
+  const navigate = useNavigate();
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good morning';
@@ -61,11 +63,11 @@ const Dashboard = ({ onNavigate, userProfile, assessmentData, onRunAssessment, h
             <span
               key={tab}
               onClick={() => {
-                if (tab === 'Health Metrics') onNavigate('healthMetrics');
-                else if (tab === 'Assessments') onNavigate('assessments');
-                else if (tab === 'Exercises') onNavigate('exercises');
-                else if (tab === 'Assistant') onNavigate('assistant');
-                else if (tab === 'Settings') onNavigate('settings');
+                if (tab === 'Health Metrics') navigate('/health-metrics');
+                else if (tab === 'Assessments') navigate('/assessments');
+                else if (tab === 'Exercises') navigate('/exercises');
+                else if (tab === 'Assistant') navigate('/assistant');
+                else if (tab === 'Settings') navigate('/settings');
               }}
               style={{
                 fontSize: '14px',
@@ -80,7 +82,7 @@ const Dashboard = ({ onNavigate, userProfile, assessmentData, onRunAssessment, h
             </span>
           ))}
           <button
-            onClick={() => onNavigate('login')}
+            onClick={() => navigate('/login')}
             style={{
               padding: '6px 12px',
               backgroundColor: 'transparent',
@@ -246,7 +248,7 @@ const Dashboard = ({ onNavigate, userProfile, assessmentData, onRunAssessment, h
         <p style={{ margin: '4px 0', color: '#666' }}><strong>Activity Level:</strong> {userProfile?.activityLevel || 'Not set'}</p>
       </div>
       <button
-        onClick={() => onNavigate('settings')}
+        onClick={() => navigate('/settings')}
         style={{
           padding: '8px 16px',
           backgroundColor: '#26A69A',

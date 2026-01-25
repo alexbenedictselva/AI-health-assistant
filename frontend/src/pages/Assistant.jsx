@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const Assistant = ({ onNavigate, userProfile, assessmentData }) => {
+const Assistant = ({ userProfile, assessmentData }) => {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -144,11 +146,12 @@ const Assistant = ({ onNavigate, userProfile, assessmentData }) => {
             <span
               key={tab}
               onClick={() => {
-                if (tab === 'Dashboard') onNavigate('dashboard');
-                else if (tab === 'Health Metrics') onNavigate('healthMetrics');
-                else if (tab === 'Assessments') onNavigate('assessments');
-                else if (tab === 'Exercises') onNavigate('exercises');
-                else if (tab === 'Settings') onNavigate('settings');
+                if (tab === 'Dashboard') navigate('/dashboard');
+                else if (tab === 'Health Metrics') navigate('/health-metrics');
+                else if (tab === 'Assessments') navigate('/assessments');
+                else if (tab === 'Exercises') navigate('/exercises');
+                else if (tab === 'Assistant') navigate('/assistant');
+                else if (tab === 'Settings') navigate('/settings');
               }}
               style={{
                 fontSize: '14px',
@@ -163,7 +166,7 @@ const Assistant = ({ onNavigate, userProfile, assessmentData }) => {
             </span>
           ))}
           <button
-            onClick={() => onNavigate('login')}
+            onClick={() => navigate('/login')}
             style={{
               padding: '6px 12px',
               backgroundColor: 'transparent',

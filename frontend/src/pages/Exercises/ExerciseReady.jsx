@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import CoachAnimation from '../../components/Exercise/CoachAnimation';
 
-const ExerciseReady = ({ onNavigate, currentWorkout }) => {
+const ExerciseReady = ({ currentWorkout }) => {
+  const navigate = useNavigate();
   const [countdown, setCountdown] = useState(3);
 
   // Reset countdown when exercise changes
@@ -13,7 +15,7 @@ const ExerciseReady = ({ onNavigate, currentWorkout }) => {
     const interval = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
-          onNavigate('exerciseSession');
+          navigate('/exercise-session');
           return 0;
         }
         return prev - 1;
@@ -21,7 +23,7 @@ const ExerciseReady = ({ onNavigate, currentWorkout }) => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [onNavigate, currentWorkout?.exercise?.id]);
+  }, [navigate, currentWorkout?.exercise?.id]);
 
   if (!currentWorkout || !currentWorkout.exercise) {
     return <div>Loading...</div>;

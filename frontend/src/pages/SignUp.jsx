@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const SignUp = ({ onNavigate, onSignUp }) => {
+const SignUp = ({ onSignUp }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -19,8 +21,7 @@ const SignUp = ({ onNavigate, onSignUp }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSignUp(formData);
-    onNavigate('profile');
+    onSignUp(formData, navigate);
   };
 
   return (
@@ -200,7 +201,7 @@ const SignUp = ({ onNavigate, onSignUp }) => {
         }}>
           Already have an account?{' '}
           <span
-            onClick={() => onNavigate('login')}
+            onClick={() => navigate('/login')}
             style={{
               color: '#1E88E5',
               cursor: 'pointer',

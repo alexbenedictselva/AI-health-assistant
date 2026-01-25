@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import CoachAnimation from '../../components/Exercise/CoachAnimation';
 import ExerciseTimer from '../../components/Exercise/ExerciseTimer';
 import ExerciseControls from '../../components/Exercise/ExerciseControls';
 import GuidanceMessage from '../../components/Exercise/GuidanceMessage';
 import { getGuidanceMessage } from '../../data/chronicWorkouts';
 
-const ExerciseSession = ({ onNavigate, currentWorkout, userProfile, onCompleteExercise }) => {
+const ExerciseSession = ({ currentWorkout, userProfile, onCompleteExercise }) => {
+  const navigate = useNavigate();
   const [isPaused, setIsPaused] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -23,23 +25,23 @@ const ExerciseSession = ({ onNavigate, currentWorkout, userProfile, onCompleteEx
     if (currentIndex < exercises.length - 1) {
       const nextIndex = currentIndex + 1;
       setCurrentIndex(nextIndex);
-      onNavigate('exerciseReady');
+      navigate('/exercise-ready');
     } else {
-      onNavigate('exerciseComplete');
+      navigate('/exercise-complete');
     }
   };
 
   const handleNext = () => {
     if (currentIndex < exercises.length - 1) {
       setCurrentIndex(prev => prev + 1);
-      onNavigate('exerciseReady');
+      navigate('/exercise-ready');
     }
   };
 
   const handlePrevious = () => {
     if (currentIndex > 0) {
       setCurrentIndex(prev => prev - 1);
-      onNavigate('exerciseReady');
+      navigate('/exercise-ready');
     }
   };
 
@@ -58,7 +60,7 @@ const ExerciseSession = ({ onNavigate, currentWorkout, userProfile, onCompleteEx
     }}>
       {/* Close button */}
       <button
-        onClick={() => onNavigate('exercises')}
+        onClick={() => navigate('/exercises')}
         style={{
           position: 'absolute',
           top: '20px',

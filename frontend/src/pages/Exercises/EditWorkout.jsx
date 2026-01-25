@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { chronicWorkouts } from '../../data/chronicWorkouts';
 
-const EditWorkout = ({ onNavigate, userProfile }) => {
+const EditWorkout = ({ userProfile }) => {
+  const navigate = useNavigate();
   const getRecommendedProgram = () => {
     const condition = userProfile?.healthCondition;
     if (condition === 'diabetes') return 'diabetes';
@@ -71,12 +73,12 @@ const EditWorkout = ({ onNavigate, userProfile }) => {
             <span
               key={tab}
               onClick={() => {
-                if (tab === 'Dashboard') onNavigate('dashboard');
-                else if (tab === 'Health Metrics') onNavigate('healthMetrics');
-                else if (tab === 'Assessments') onNavigate('assessments');
-                else if (tab === 'Exercises') onNavigate('exercises');
-                else if (tab === 'Assistant') onNavigate('assistant');
-                else if (tab === 'Settings') onNavigate('settings');
+                if (tab === 'Dashboard') navigate('/dashboard');
+                else if (tab === 'Health Metrics') navigate('/health-metrics');
+                else if (tab === 'Assessments') navigate('/assessments');
+                else if (tab === 'Exercises') navigate('/exercises');
+                else if (tab === 'Assistant') navigate('/assistant');
+                else if (tab === 'Settings') navigate('/settings');
               }}
               style={{
                 fontSize: '14px',
@@ -91,7 +93,7 @@ const EditWorkout = ({ onNavigate, userProfile }) => {
             </span>
           ))}
           <button
-            onClick={() => onNavigate('signup')}
+            onClick={() => navigate('/login')}
             style={{
               padding: '6px 12px',
               backgroundColor: 'transparent',
@@ -251,7 +253,7 @@ const EditWorkout = ({ onNavigate, userProfile }) => {
           justifyContent: 'center'
         }}>
           <button
-            onClick={() => onNavigate('exercises')}
+            onClick={() => navigate('/exercises')}
             style={{
               padding: '12px 24px',
               backgroundColor: 'transparent',
@@ -265,7 +267,7 @@ const EditWorkout = ({ onNavigate, userProfile }) => {
             Cancel
           </button>
           <button
-            onClick={() => onNavigate('exercises')}
+            onClick={() => navigate('/exercises')}
             style={{
               padding: '12px 24px',
               backgroundColor: '#66BB6A',

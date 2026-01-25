@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { chronicWorkouts } from '../../data/chronicWorkouts';
 import CoachAnimation from '../../components/Exercise/CoachAnimation';
 
-const ExercisesHome = ({ onNavigate, onStartWorkout, userProfile }) => {
+const ExercisesHome = ({ onStartWorkout, userProfile }) => {
+  const navigate = useNavigate();
   const [isRoutineActive, setIsRoutineActive] = useState(false);
   const [activeExerciseIndex, setActiveExerciseIndex] = useState(-1);
   const [timeRemaining, setTimeRemaining] = useState(0);
@@ -77,7 +79,7 @@ const ExercisesHome = ({ onNavigate, onStartWorkout, userProfile }) => {
       exercise,
       exercises: currentDay.exercises
     });
-    onNavigate('exerciseReady');
+    navigate('/exercise-ready');
   };
 
   const getExerciseState = (index) => {
@@ -137,11 +139,11 @@ const ExercisesHome = ({ onNavigate, onStartWorkout, userProfile }) => {
             <span
               key={tab}
               onClick={() => {
-                if (tab === 'Dashboard') onNavigate('dashboard');
-                else if (tab === 'Health Metrics') onNavigate('healthMetrics');
-                else if (tab === 'Assessments') onNavigate('assessments');
-                else if (tab === 'Assistant') onNavigate('assistant');
-                else if (tab === 'Settings') onNavigate('settings');
+                if (tab === 'Dashboard') navigate('/dashboard');
+                else if (tab === 'Health Metrics') navigate('/health-metrics');
+                else if (tab === 'Assessments') navigate('/assessments');
+                else if (tab === 'Assistant') navigate('/assistant');
+                else if (tab === 'Settings') navigate('/settings');
               }}
               style={{
                 fontSize: '14px',
@@ -156,7 +158,7 @@ const ExercisesHome = ({ onNavigate, onStartWorkout, userProfile }) => {
             </span>
           ))}
           <button
-            onClick={() => onNavigate('login')}
+            onClick={() => navigate('/login')}
             style={{
               padding: '6px 12px',
               backgroundColor: 'transparent',

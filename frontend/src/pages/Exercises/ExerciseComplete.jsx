@@ -1,6 +1,8 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const ExerciseComplete = ({ onNavigate, completedExercises, currentWorkout }) => {
+const ExerciseComplete = ({ completedExercises, currentWorkout }) => {
+  const navigate = useNavigate();
   const totalDuration = completedExercises?.reduce((sum, ex) => sum + ex.duration, 0) || 0;
   const exerciseCount = completedExercises?.length || 0;
 
@@ -100,7 +102,7 @@ const ExerciseComplete = ({ onNavigate, completedExercises, currentWorkout }) =>
           marginTop: '32px'
         }}>
           <button
-            onClick={() => onNavigate('exercises')}
+            onClick={() => navigate('/exercises')}
             style={{
               padding: '16px 24px',
               backgroundColor: '#66BB6A',
@@ -117,7 +119,7 @@ const ExerciseComplete = ({ onNavigate, completedExercises, currentWorkout }) =>
           </button>
           
           <button
-            onClick={() => onNavigate('exerciseReady')}
+            onClick={() => navigate('/exercise-ready')}
             style={{
               padding: '16px 24px',
               backgroundColor: 'transparent',
@@ -134,7 +136,7 @@ const ExerciseComplete = ({ onNavigate, completedExercises, currentWorkout }) =>
           </button>
           
           <button
-            onClick={() => onNavigate('dashboard')}
+            onClick={() => navigate('/dashboard')}
             style={{
               padding: '16px 24px',
               backgroundColor: 'transparent',
