@@ -8,6 +8,7 @@ from sqlalchemy import (
     Float,
     DateTime
 )
+from sqlalchemy.orm import relationship
 from datetime import datetime
 from database import Base
 
@@ -23,3 +24,6 @@ class User(Base):
 
     # ---------- SYSTEM METADATA ----------
     created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # ---------- RELATIONSHIPS ----------
+    risk_calculations = relationship("RiskCalculation", back_populates="user")
