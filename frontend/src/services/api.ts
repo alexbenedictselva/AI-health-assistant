@@ -90,7 +90,7 @@ export const riskAPI = {
   calculateCardiacRisk: (data: CardiacRiskData) => api.post('/cardiac-risk', data),
   getDiabetesExplanation: (data: any) => api.post('/explain', data),
   getCardiacExplanation: (data: any) => api.post('/explain-cardiac', data),
-  getDiabetesRecommendations: (data: any) => api.post('/recommendations', data),
+  getDiabetesRecommendations: (data: any) => api.post('/diabetes-recommendations', data),
   getCardiacRecommendations: (data: any) => api.post('/cardiac-recommendations', data),
 };
 
