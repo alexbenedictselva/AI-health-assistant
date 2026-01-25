@@ -191,15 +191,6 @@ const Assessments = ({ onNavigate, assessmentData, assessmentHistory, onRunNewAs
     );
   };
 
-  const getRiskLevelColor = (level) => {
-    switch (level) {
-      case 'low': return '#66BB6A';
-      case 'medium': return '#FB8C00';
-      case 'high': return '#E53935';
-      default: return '#666';
-    }
-  };
-
   const handleRunNewAssessment = () => {
     onRunNewAssessment();
     // Stay on the assessment result page - no navigation
@@ -581,7 +572,7 @@ const Assessments = ({ onNavigate, assessmentData, assessmentHistory, onRunNewAs
             </h2>
             <SimpleChart 
               data={assessmentHistory?.map(a => ({ 
-                value: a.riskScore >= 70 ? 'high' : a.riskScore >= 50 ? 'medium' : 'low', 
+                value: a.riskScore >= 70 ? 'High' : a.riskScore >= 50 ? 'Medium' : 'Low', 
                 date: a.date,
                 score: a.riskScore 
               }))}
