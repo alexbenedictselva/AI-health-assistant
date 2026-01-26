@@ -1,79 +1,133 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+} from "react";
 
 interface User {
   id: number;
   name: string;
   email: string;
+  is_admin?: boolean;
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (token: string, userData?: User) => void;
+  login: (token: string, userData: User) => void;
   logout: () => void;
   getUserId: () => number;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  /* =========================
+     Restore session on refresh
+     ========================= */
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    
-    if (token && userData) {
+    const token = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
+
+    if (token && storedUser) {
       try {
-        setUser(JSON.parse(userData));
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
         setIsAuthenticated(true);
-      } catch (error) {
-        // Clear invalid data
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        console.error('Invalid user data in localStorage:', error);
+      } catch (err) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
       }
     }
   }, []);
 
-  const login = (token: string, userData?: User) => {
-    localStorage.setItem('token', token);
-    if (userData) {
-      localStorage.setItem('user', JSON.stringify(userData));
-      setUser(userData);
-    } else {
-      // Generate unique user ID based on timestamp and random number
-      const uniqueId = Date.now() + Math.floor(Math.random() * 1000);
-      const defaultUser = { id: uniqueId, name: 'User', email: '' };
-      localStorage.setItem('user', JSON.stringify(defaultUser));
-      setUser(defaultUser);
-    }
+  /* =========================
+     Login
+     ========================= */
+  const login = (token: string, userData: User) => {
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(userData));
+
+    setUser(userData);
     setIsAuthenticated(true);
   };
 
+  /* =========================
+     Logout (manual or forced)
+     ========================= */
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
     setUser(null);
     setIsAuthenticated(false);
   };
 
+  /* =========================================
+     🚨 Auto logout when token expires (401)
+     Triggered by Axios interceptor
+     ========================================= */
+  // Note: navigation is handled by App/AuthListener. AuthProvider only manages auth state.
+  useEffect(() => {
+    const handleAuthInvalid = () => {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+
+      setUser(null);
+      setIsAuthenticated(false);
+      // Do not call navigate here; AuthListener in App will perform navigation.
+    };
+
+    window.addEventListener("auth:invalid", handleAuthInvalid);
+
+    return () => {
+      window.removeEventListener("auth:invalid", handleAuthInvalid);
+    };
+  }, []);
+
+  /* =========================
+     Safe User ID for APIs
+     ========================= */
   const getUserId = () => {
-    return user?.id || 1; // Default to 1 if no user
+    const uid = user?.id;
+    if (
+      typeof uid === "number" &&
+      Number.isFinite(uid) &&
+      Math.abs(uid) < 2147483647
+    ) {
+      return uid;
+    }
+    return 1; // fallback (dev-safe)
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, getUserId }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated,
+        login,
+        logout,
+        getUserId,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
+/* =========================
+   Hook
+   ========================= */
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

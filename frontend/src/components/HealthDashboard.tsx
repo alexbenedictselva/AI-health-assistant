@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { metricsAPI, healthAPI } from '../services/api';
+import { metricsAPI } from '../services/api';
 import '../styles/HealthDashboard.css';
 
 const HealthDashboard: React.FC = () => {
@@ -16,8 +16,21 @@ const HealthDashboard: React.FC = () => {
 
   const [loading, setLoading] = useState(true);
 
+  // fetchHealthData is defined inside the component; we intentionally run it once on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchHealthData();
+  }, []);
+
+  // Listen for metrics updates (dispatched after creating metrics) and refresh dashboard
+  // Listen for metrics updates (dispatched after creating metrics) and refresh dashboard
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const onMetricsUpdated = () => {
+      fetchHealthData();
+    };
+    window.addEventListener('metrics:updated', onMetricsUpdated);
+    return () => window.removeEventListener('metrics:updated', onMetricsUpdated);
   }, []);
 
   const fetchHealthData = async () => {
@@ -32,8 +45,12 @@ const HealthDashboard: React.FC = () => {
 
       
 
-      // Helper: sort by created_at descending
-      const sortByDateDesc = (arr: any[]) => arr.slice().sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      // Helper: sort by timestamp (ms) if available, otherwise fall back to created_at ISO string
+      const sortByDateDesc = (arr: any[]) => arr.slice().sort((a,b) => {
+        const aTs = (a && a.timestamp) ? Number(a.timestamp) : (a && a.created_at ? new Date(a.created_at).getTime() : 0);
+        const bTs = (b && b.timestamp) ? Number(b.timestamp) : (b && b.created_at ? new Date(b.created_at).getTime() : 0);
+        return bTs - aTs;
+      });
 
       const latestDiabetes = sortByDateDesc(diabetesMetrics)[0];
       const latestCardiac = sortByDateDesc(cardiacMetrics)[0];

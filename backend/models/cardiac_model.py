@@ -19,5 +19,7 @@ class CardiacRiskInput(BaseModel):
     
     # Baseline factors
     age: int
-    bmi_category: str  # "normal", "overweight", "obese"
+    height_cm: Optional[float] = None
+    weight_kg: Optional[float] = None
+    bmi_category: Optional[str] = 'normal'  # "normal", "overweight", "obese"
     family_history: bool = False

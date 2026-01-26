@@ -1,9 +1,12 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from database import engine, Base, SessionLocal
 from api import auth_router, risk_router
+from auth.auth_utils import get_current_user
+from models.user import User
 from ExplanableAI.diabetes_explanation_ai import generate_explanation, generate_summary
+from datetime import timezone
 
 # ---------- APP ----------
 app = FastAPI(
@@ -72,7 +75,7 @@ def explain_cardiac_risk(risk_data: dict):
     }
 
 @app.post("/diabetes-recommendations")
-def get_diabetes_recommendations(risk_data: dict):
+def get_diabetes_recommendations(risk_data: dict, current_user: User = Depends(get_current_user)):
     from recommendations.diabetes_recommendations import generate_diabetes_recommendations
     from models.recommendations import DiabetesRecommendation
     
@@ -82,6 +85,7 @@ def get_diabetes_recommendations(risk_data: dict):
     db = SessionLocal()
     try:
         db_recommendation = DiabetesRecommendation(
+            user_id=current_user.id,
             risk_score=risk_data.get("risk_score", 0),
             risk_level=risk_data.get("risk_level", "Unknown"),
             recommendations=recommendations
@@ -99,7 +103,7 @@ def get_diabetes_recommendations(risk_data: dict):
     }
 
 @app.post("/cardiac-recommendations")
-def get_cardiac_recommendations(risk_data: dict):
+def get_cardiac_recommendations(risk_data: dict, current_user: User = Depends(get_current_user)):
     from recommendations.cardiac_recommendations import generate_cardiac_recommendations
     from models.recommendations import CardiacRecommendation
     
@@ -109,6 +113,7 @@ def get_cardiac_recommendations(risk_data: dict):
     db = SessionLocal()
     try:
         db_recommendation = CardiacRecommendation(
+            user_id=current_user.id,
             risk_score=risk_data.get("risk_score", 0),
             risk_level=risk_data.get("risk_level", "Unknown"),
             recommendations=recommendations
@@ -126,7 +131,7 @@ def get_cardiac_recommendations(risk_data: dict):
     }
 
 @app.post("/user-metrics")
-def create_user_metrics(metrics_data: dict):
+def create_user_metrics(metrics_data: dict, current_user: User = Depends(get_current_user)):
     from models.user_metrics import UserMetrics
     
     db = SessionLocal()
@@ -143,6 +148,9 @@ def create_user_metrics(metrics_data: dict):
         }
 
         filtered = {k: v for k, v in metrics_data.items() if k in allowed_fields}
+
+        # Force the user_id to be the authenticated user to enforce relationships
+        filtered['user_id'] = current_user.id
 
         # Normalize some common types
         if 'family_history' in filtered:
@@ -167,12 +175,18 @@ def create_user_metrics(metrics_data: dict):
     finally:
         db.close()
 
-@app.get("/user-metrics/{user_id}")
-def get_user_metrics(user_id: int, disease_type: str = None):
+@app.get("/user-metrics")
+def get_user_metrics(user_id: int = None, disease_type: str = None, current_user: User = Depends(get_current_user)):
     from models.user_metrics import UserMetrics
     
     db = SessionLocal()
     try:
+        # Ensure the caller is only fetching their own metrics (unless user_id is omitted)
+        if user_id is None:
+            user_id = current_user.id
+        elif user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Forbidden: cannot access other user's metrics")
+
         query = db.query(UserMetrics).filter(UserMetrics.user_id == user_id)
         if disease_type:
             query = query.filter(UserMetrics.disease_type == disease_type)
@@ -180,11 +194,28 @@ def get_user_metrics(user_id: int, disease_type: str = None):
         metrics = query.all()
         result = []
         for m in metrics:
+            # Ensure created_at is serialized consistently (ISO string) and provide an epoch timestamp (ms)
+            created_at_iso = None
+            created_at_ts = None
+            if getattr(m, 'created_at', None):
+                try:
+                    # Assume stored datetimes are UTC (naive). Make timezone-aware UTC before serializing.
+                    dt = m.created_at
+                    if dt.tzinfo is None:
+                        dt = dt.replace(tzinfo=timezone.utc)
+                    created_at_iso = dt.isoformat()
+                    # milliseconds since epoch
+                    created_at_ts = int(dt.timestamp() * 1000)
+                except Exception:
+                    # Fallback to str if unexpected type
+                    created_at_iso = str(m.created_at)
+
             metric_dict = {
                 "metric_id": m.metric_id,
                 "user_id": m.user_id,
                 "disease_type": m.disease_type,
-                "created_at": m.created_at
+                "created_at": created_at_iso,
+                "timestamp": created_at_ts
             }
             
             # Add disease-specific fields

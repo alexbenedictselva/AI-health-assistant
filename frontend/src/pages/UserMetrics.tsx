@@ -10,6 +10,8 @@ const UserMetrics: React.FC = () => {
   const [selectedType, setSelectedType] = useState<string>('all');
 
   useEffect(() => {
+    // We intentionally call fetchMetrics when selectedType changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     fetchMetrics();
   }, [selectedType]);
 
@@ -38,8 +40,11 @@ const UserMetrics: React.FC = () => {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+  const formatDate = (dateOrTimestamp: string | number | undefined) => {
+    if (!dateOrTimestamp) return '—';
+    const date = typeof dateOrTimestamp === 'number' ? new Date(dateOrTimestamp) : new Date(String(dateOrTimestamp));
+    if (isNaN(date.getTime())) return String(dateOrTimestamp);
+    return date.toLocaleString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -51,7 +56,7 @@ const UserMetrics: React.FC = () => {
   const renderDiabetesMetrics = (metric: any) => (
     <div className="card" key={metric.metric_id}>
       <div className="card-header">
-        🩺 Diabetes Metrics - {formatDate(metric.created_at)}
+  🩺 Diabetes Metrics - {formatDate(metric.timestamp ?? metric.created_at)}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
         <div>
@@ -94,7 +99,7 @@ const UserMetrics: React.FC = () => {
   const renderCardiacMetrics = (metric: any) => (
     <div className="card" key={metric.metric_id}>
       <div className="card-header">
-        ❤️ Cardiac Metrics - {formatDate(metric.created_at)}
+  ❤️ Cardiac Metrics - {formatDate(metric.timestamp ?? metric.created_at)}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
         <div>

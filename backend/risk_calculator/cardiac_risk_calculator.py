@@ -115,6 +115,8 @@ def calculate_cardiac_risk(data: dict):
     else:
         level = "Critical Risk"
 
+    score = min(score, 100)  # Cap at 100
+    
     return {
         "risk_score": score,
         "risk_level": level,

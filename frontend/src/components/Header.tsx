@@ -1,41 +1,50 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import React from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 const Header: React.FC = () => {
-  const navigate = useNavigate();
-  const { logout, user } = useAuth();
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  const { user, logout } = useAuth();
+  const isAdmin = Boolean(user?.is_admin);
 
   return (
-    <header className="header">
+    <header className="dashboard-header">
       <div className="header-content">
-        <div className="logo" aria-label="AI Health Assistant">
-          <div style={{fontSize: '1rem', fontWeight: 700}}>AI Health Assistant</div>
-          {/* <div style={{fontSize: '0.8rem', fontWeight: 400, color: 'rgba(255,255,255,0.9)'}}>Clinical risk insights • Clear recommendations</div> */}
+
+        {/* LEFT: Logo */}
+        <div className="header-left">
+          <Link to="/" className="logo">
+            AI Health Assistant
+          </Link>
         </div>
-        <nav>
-          <ul className="nav-links">
-            <li><Link to="/dashboard">Dashboard</Link></li>
-            <li><Link to="/diabetes">Diabetes Assessment</Link></li>
-            <li><Link to="/cardiac">Cardiac Assessment</Link></li>
-            <li><Link to="/metrics">My Metrics</Link></li>
+
+        {/* CENTER: Navigation */}
+        <nav className="header-nav">
+          <ul>
+            {!isAdmin && (
+              <>
+                <li><Link to="/dashboard">Dashboard</Link></li>
+                <li><Link to="/diabetes">Diabetes Assessment</Link></li>
+                <li><Link to="/cardiac">Cardiac Assessment</Link></li>
+                <li><Link to="/metrics">My Metrics</Link></li>
+              </>
+            )}
+
+            {isAdmin && (
+              <li><Link to="/admin">Admin</Link></li>
+            )}
           </ul>
         </nav>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          {user && (
-            <span className="welcome">
-              Welcome, {user.name}
-            </span>
-          )}
-          <button className="logout-btn" onClick={handleLogout}>
+
+        {/* RIGHT: User info */}
+        <div className="header-right">
+          <span className="welcome">
+            Welcome, {user?.name || "User"}
+          </span>
+          <button onClick={logout} className="btn btn-outline">
             Logout
           </button>
         </div>
+
       </div>
     </header>
   );

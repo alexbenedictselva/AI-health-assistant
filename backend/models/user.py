@@ -23,3 +23,5 @@ class User(Base):
 
     # ---------- SYSTEM METADATA ----------
     created_at = Column(DateTime, default=datetime.utcnow)
+    # Admin flag to allow role-based access
+    is_admin = Column(Boolean, default=False, nullable=False)

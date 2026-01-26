@@ -1,8 +1,24 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import HealthDashboard from '../components/HealthDashboard';
+import { useAuth } from '../contexts/AuthContext';
+import AdminDashboard from './AdminDashboard';
 
 const Dashboard: React.FC = () => {
+  const { user } = useAuth();
+
+  // Keep an explicit isAdmin state so the UI can react to role changes
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+
+  useEffect(() => {
+    setIsAdmin(Boolean(user?.is_admin));
+  }, [user]);
+
+  // If an admin is logged in, show only the Admin users list
+  if (isAdmin) {
+    return <AdminDashboard />;
+  }
+
   return (
     <div>
       <HealthDashboard />

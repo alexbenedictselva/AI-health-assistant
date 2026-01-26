@@ -1,5 +1,10 @@
 /* Healthcare Dashboard Styles */
+/* .logo{
+  width: 32px;
+  height: 32px;
+  margin-left: 0px;
 
+} */
 .health-dashboard {
   min-height: 100vh;
   background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
@@ -7,6 +12,146 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 
 }
+
+/* ===== Admin Dashboard ===== */
+
+.admin-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.admin-header h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #065f46;
+  margin-bottom: 0.25rem;
+}
+
+.admin-subtitle {
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+}
+
+/* Controls */
+.admin-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.admin-count {
+  font-size: 0.95rem;
+  color: #374151;
+}
+
+.admin-search {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.input {
+  padding: 0.45rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid #d1fae5;
+  outline: none;
+}
+
+/* Card */
+.admin-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.12);
+  border: 1px solid #d1fae5;
+}
+
+.admin-card-header {
+  padding: 1rem 1.5rem;
+  font-weight: 600;
+  color: #065f46;
+  border-bottom: 1px solid #ecfdf5;
+}
+
+/* Table */
+.admin-table-wrapper {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table th {
+  text-align: left;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.85rem;
+  color: #6b7280;
+  background: #f0fdf4;
+}
+
+.admin-table td {
+  padding: 0.75rem 1.5rem;
+  border-top: 1px solid #ecfdf5;
+  color: #374151;
+}
+
+.admin-table tr:hover {
+  background: #f9fafb;
+}
+
+/* Badges */
+.badge {
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-admin {
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.badge-user {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+/* Actions */
+.action-cell {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-sm {
+  padding: 0.3rem 0.65rem;
+  font-size: 0.8rem;
+}
+
+.btn-outline {
+  background: #ffffff;
+  border: 1px solid #10b981;
+  color: #065f46;
+}
+
+.btn-outline:hover {
+  background: #ecfdf5;
+}
+
+.btn-danger {
+  background: #fee2e2;
+  color: #991b1b;
+  border: none;
+}
+
+.btn-danger:hover {
+  background: #fecaca;
+}
+
 
 /* Header Section */
 .dashboard-header {
@@ -77,6 +222,7 @@
   font-weight: 700;
   font-size: 0.95rem;
   white-space: nowrap;
+  margin-right: 10px;
 }
 
 .header-text {
@@ -503,4 +649,8 @@
   .progress-score {
     font-size: 1.75rem;
   }
+}
+
+button{
+  margin-right: 0px;
 }

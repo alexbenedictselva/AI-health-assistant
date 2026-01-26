@@ -16,6 +16,8 @@ const CardiacAssessment: React.FC = () => {
     diabetes: false,
     age: 0,
     bmi_category: 'normal',
+    weight_kg: 0,
+    height_cm: 0,
     family_history: false
   });
   
@@ -23,20 +25,58 @@ const CardiacAssessment: React.FC = () => {
   const [recommendations, setRecommendations] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string,string>>({});
+
+  const computeBMICategory = (height_cm?: number, weight_kg?: number) => {
+    if (!height_cm || !weight_kg || height_cm <= 0) return 'normal';
+    const height_m = height_cm / 100;
+    const bmi = weight_kg / (height_m * height_m);
+    if (bmi >= 30) return 'obese';
+    if (bmi >= 25) return 'overweight';
+    return 'normal';
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
-              type === 'number' ? (value ? parseInt(value) : undefined) : value
+    const parsedValue = type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
+                        type === 'number' ? (value === '' ? '' : parseFloat(value)) : value;
+
+    setFormData(prev => {
+      const updated = { ...prev, [name]: parsedValue } as any;
+      // If user provided height or weight, compute BMI category automatically
+      if (name === 'height_cm' || name === 'weight_kg') {
+        const height = Number(name === 'height_cm' ? parsedValue : updated.height_cm);
+        const weight = Number(name === 'weight_kg' ? parsedValue : updated.weight_kg);
+        if (height && weight) {
+          updated.bmi_category = computeBMICategory(Number(height), Number(weight));
+        }
+      }
+      return updated;
     });
+
+    // Clear field-level error on edit
+    setFieldErrors(prev => ({ ...prev, [name]: '' }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    // Validate age, height, weight
+    const errs: Record<string,string> = {};
+    const age = Number(formData.age);
+    const height = Number((formData as any).height_cm);
+    const weight = Number((formData as any).weight_kg);
+    if (!(age > 30 && age < 70)) errs.age = 'Age must be greater than 30 and less than 70.';
+    if (!(height > 90)) errs.height_cm = 'Height must be greater than 90 cm.';
+    if (!(weight > 40)) errs.weight_kg = 'Weight must be greater than 40 kg.';
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      setError('Please correct the highlighted fields.');
+      setLoading(false);
+      return;
+    }
 
     try {
       // Calculate risk with explanation and store metrics
@@ -51,8 +91,17 @@ const CardiacAssessment: React.FC = () => {
       const metricsData = {
         ...formData,
         disease_type: 'cardiac'
-      };
+      } as any;
+      // include weight/height for metrics if present
+      if ((formData as any).weight_kg) metricsData.weight_kg = (formData as any).weight_kg;
+      if ((formData as any).height_cm) metricsData.height_cm = (formData as any).height_cm;
       await metricsAPI.createMetrics(metricsData);
+      // Notify other parts of the app that metrics changed (e.g., dashboard)
+      try {
+        window.dispatchEvent(new CustomEvent('metrics:updated'));
+      } catch (e) {
+        // ignore if dispatching fails in restricted environments
+      }
     } catch (err: any) {
       console.error('Assessment error:', err);
       setError('Network error. Please check if the backend server is running.');
@@ -195,6 +244,41 @@ const CardiacAssessment: React.FC = () => {
                 min="0"
                 max="120"
               />
+              {fieldErrors.age && <div className="field-error" style={{ color: 'var(--danger-red)', marginTop: '0.5rem' }}>{fieldErrors.age}</div>}
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Weight (kg)</label>
+              <input
+                type="number"
+                name="weight_kg"
+                className="form-input"
+                value={(formData as any).weight_kg || ''}
+                onChange={handleChange}
+                required
+                min="1"
+                step="0.1"
+                placeholder="Enter weight"
+              />
+              {fieldErrors.weight_kg && <div className="field-error" style={{ color: 'var(--danger-red)', marginTop: '0.5rem' }}>{fieldErrors.weight_kg}</div>}
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Height (cm)</label>
+              <input
+                type="number"
+                name="height_cm"
+                className="form-input"
+                value={(formData as any).height_cm || ''}
+                onChange={handleChange}
+                required
+                min="1"
+                step="0.1"
+                placeholder="Enter height"
+              />
+              {fieldErrors.height_cm && <div className="field-error" style={{ color: 'var(--danger-red)', marginTop: '0.5rem' }}>{fieldErrors.height_cm}</div>}
             </div>
           </div>
 

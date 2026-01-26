@@ -24,6 +24,7 @@ const DiabetesAssessment: React.FC = () => {
   const [recommendations, setRecommendations] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string,string>>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -43,12 +44,34 @@ const DiabetesAssessment: React.FC = () => {
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
               type === 'number' ? (value === '' ? '' : parseFloat(value) || 0) : processedValue
     });
+    // Clear field-level error on edit
+    setFieldErrors(prev => ({ ...prev, [name]: '' }));
+  };
+
+  const validateForm = () => {
+  const errs: Record<string,string> = {};
+    const height = Number(formData.height_cm);
+    const weight = Number(formData.weight_kg);
+
+  // Age validation intentionally disabled for diabetes assessment; uncomment if needed
+    if (!(height > 90)) errs.height_cm = 'Height must be greater than 90 cm.';
+    if (!(weight > 40)) errs.weight_kg = 'Weight must be greater than 40 kg.';
+
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    // Validate before sending
+    if (!validateForm()) {
+      setError('Please correct the highlighted fields.');
+      setLoading(false);
+      return;
+    }
 
     try {
       // Calculate risk with explanation
@@ -71,6 +94,12 @@ const DiabetesAssessment: React.FC = () => {
           disease_type: 'diabetes'
         };
         await metricsAPI.createMetrics(metricsData);
+          // Notify other parts of the app that metrics changed (e.g., dashboard)
+          try {
+            window.dispatchEvent(new CustomEvent('metrics:updated'));
+          } catch (e) {
+            // ignore environments where CustomEvent may be restricted
+          }
       } catch (metricsErr) {
         console.warn('Metrics storage failed:', metricsErr);
         // Continue without storing metrics
@@ -157,7 +186,6 @@ const DiabetesAssessment: React.FC = () => {
                 <option value="none">None of these</option>
                 <option value="low-sugar">Low sugar symptoms</option>
                 <option value="high-sugar">High sugar symptoms</option>
-                <option value="both-symptoms">Both low and high sugar</option>
               </select>
             </div>
           </div>
@@ -237,6 +265,7 @@ const DiabetesAssessment: React.FC = () => {
                 max="120"
                 placeholder="Enter age"
               />
+              {fieldErrors.age && <div className="field-error" style={{ color: 'var(--danger-red)', marginTop: '0.5rem' }}>{fieldErrors.age}</div>}
             </div>
             
             <div className="form-group">
@@ -252,6 +281,7 @@ const DiabetesAssessment: React.FC = () => {
                 step="0.1"
                 placeholder="Enter weight"
               />
+              {fieldErrors.weight_kg && <div className="field-error" style={{ color: 'var(--danger-red)', marginTop: '0.5rem' }}>{fieldErrors.weight_kg}</div>}
             </div>
           </div>
 
@@ -269,6 +299,7 @@ const DiabetesAssessment: React.FC = () => {
                 step="0.1"
                 placeholder="Enter height"
               />
+              {fieldErrors.height_cm && <div className="field-error" style={{ color: 'var(--danger-red)', marginTop: '0.5rem' }}>{fieldErrors.height_cm}</div>}
             </div>
             
             <div className="form-group">
@@ -348,6 +379,42 @@ const DiabetesAssessment: React.FC = () => {
                       ))}
                     </div>
                   </details>
+                )}
+              </div>
+            </div>
+          )}
+
+          {result.comparison && result.comparison.previous_record_id && (
+            <div className="card" style={{ marginTop: '1rem' }}>
+              <div className="card-header">Comparison to previous assessment</div>
+              <div style={{ padding: '1rem' }}>
+                <div style={{ marginBottom: '0.5rem' }}>
+                  {result.comparison.direction === 'increased' && (
+                    <strong style={{ color: 'var(--danger-red)' }}>Your risk increased by {Math.abs(result.comparison.delta)} points compared to the previous assessment.</strong>
+                  )}
+                  {result.comparison.direction === 'decreased' && (
+                    <strong style={{ color: 'var(--primary-green)' }}>Your risk decreased by {Math.abs(result.comparison.delta)} points compared to the previous assessment.</strong>
+                  )}
+                  {result.comparison.direction === 'no_change' && (
+                    <strong>Your risk did not change compared to the previous assessment.</strong>
+                  )}
+                </div>
+
+                {result.comparison.previous_created_at && (
+                  <div style={{ marginBottom: '0.75rem', color: 'var(--gray-medium)' }}>
+                    Previous assessment: {new Date(result.comparison.previous_created_at).toLocaleString()}
+                  </div>
+                )}
+
+                {Array.isArray(result.comparison.reasons) && result.comparison.reasons.length > 0 && (
+                  <div>
+                    <div style={{ fontWeight: 700, marginBottom: '0.5rem' }}>Why this changed:</div>
+                    <ul>
+                      {result.comparison.reasons.map((r: any, i: number) => (
+                        <li key={i} style={{ marginBottom: '0.35rem' }}>{String(r)}</li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
               </div>
             </div>

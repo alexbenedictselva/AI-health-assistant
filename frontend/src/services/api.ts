@@ -9,26 +9,31 @@ const api = axios.create({
   },
 });
 
-// Add token to requests if available
+// Attach token when available
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// Response interceptor for handling auth errors
+// On 401, clear storage and notify app
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
-      window.location.href = '/login';
+      localStorage.removeItem('user');
+      try {
+        window.dispatchEvent(new Event('auth:invalid'));
+      } catch (e) {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
 );
+
+export default api;
 
 export interface LoginData {
   email: string;
@@ -69,6 +74,8 @@ export interface CardiacRiskData {
   diabetes: boolean;
   age: number;
   bmi_category: string;
+  weight_kg?: number;
+  height_cm?: number;
   family_history: boolean;
 }
 
@@ -82,12 +89,17 @@ export interface UserMetricsData {
 export const authAPI = {
   login: (data: LoginData) => api.post('/login', data),
   register: (data: RegisterData) => api.post('/register', data),
+  getUsers: () => api.get('/users'),
+  deleteUser: (userId: number) => api.delete(`/users/${userId}`),
+  toggleAdmin: (userId: number, isAdmin: boolean) => api.post(`/users/${userId}/admin-toggle`, { is_admin: isAdmin }),
+  getAdminStats: () => api.get('/admin/stats'),
+  getUserRecommendations: (userId: number) => api.get(`/users/${userId}/recommendations`),
 };
 
-// Risk Assessment API
+// Risk Assessment API (names expected by codebase)
 export const riskAPI = {
-  calculateDiabetesRisk: (data: DiabetesRiskData) => api.post('/diabetes-risk', data),
-  calculateCardiacRisk: (data: CardiacRiskData) => api.post('/cardiac-risk', data),
+  calculateDiabetesRisk: (data: any) => api.post('/diabetes-risk', data),
+  calculateCardiacRisk: (data: any) => api.post('/cardiac-risk', data),
   getDiabetesExplanation: (data: any) => api.post('/explain', data),
   getCardiacExplanation: (data: any) => api.post('/explain-cardiac', data),
   getDiabetesRecommendations: (data: any) => api.post('/diabetes-recommendations', data),
@@ -96,17 +108,18 @@ export const riskAPI = {
 
 // User Metrics API
 export const metricsAPI = {
-  createMetrics: (data: UserMetricsData) => api.post('/user-metrics', data),
-  getUserMetrics: (userId: number, diseaseType?: string) => {
-    const params = diseaseType ? `?disease_type=${diseaseType}` : '';
-    return api.get(`/user-metrics/${userId}${params}`);
+  createMetrics: (data: any) => api.post('/user-metrics', data),
+  getUserMetrics: (userId?: number, diseaseType?: string) => {
+    const params: string[] = [];
+    if (userId) params.push(`user_id=${userId}`);
+    if (diseaseType) params.push(`disease_type=${diseaseType}`);
+    const qs = params.length ? `?${params.join('&')}` : '';
+    return api.get(`/user-metrics${qs}`);
   },
 };
 
-// Health Check API
+// Health endpoints
 export const healthAPI = {
   checkStatus: () => api.get('/'),
   checkDatabase: () => api.get('/db-test'),
 };
-
-export default api;
