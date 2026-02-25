@@ -13,7 +13,7 @@ from models.user import User
 
 SECRET_KEY = "supersecretkey"   # move to .env later
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 1
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 def hash_password(password: str):
     # Use SHA-256 with salt for password hashing

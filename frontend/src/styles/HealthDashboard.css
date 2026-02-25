@@ -1,298 +1,64 @@
-/* Healthcare Dashboard Styles */
-/* .logo{
-  width: 32px;
-  height: 32px;
-  margin-left: 0px;
-
-} */
 .health-dashboard {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
-  padding: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-
-}
-
-/* ===== Admin Dashboard ===== */
-
-.admin-page {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-
-.admin-header h2 {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #065f46;
-  margin-bottom: 0.25rem;
-}
-
-.admin-subtitle {
-  color: #6b7280;
-  margin-bottom: 1.5rem;
-}
-
-/* Controls */
-.admin-controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.admin-count {
-  font-size: 0.95rem;
-  color: #374151;
-}
-
-.admin-search {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.input {
-  padding: 0.45rem 0.7rem;
-  border-radius: 8px;
-  border: 1px solid #d1fae5;
-  outline: none;
-}
-
-/* Card */
-.admin-card {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.12);
-  border: 1px solid #d1fae5;
-}
-
-.admin-card-header {
-  padding: 1rem 1.5rem;
-  font-weight: 600;
-  color: #065f46;
-  border-bottom: 1px solid #ecfdf5;
-}
-
-/* Table */
-.admin-table-wrapper {
-  overflow-x: auto;
-}
-
-.admin-table {
   width: 100%;
-  border-collapse: collapse;
+  max-width: 1280px;
+  margin: 0 auto;
 }
 
-.admin-table th {
-  text-align: left;
-  padding: 0.75rem 1.5rem;
-  font-size: 0.85rem;
-  color: #6b7280;
-  background: #f0fdf4;
-}
-
-.admin-table td {
-  padding: 0.75rem 1.5rem;
-  border-top: 1px solid #ecfdf5;
-  color: #374151;
-}
-
-.admin-table tr:hover {
-  background: #f9fafb;
-}
-
-/* Badges */
-.badge {
-  padding: 0.25rem 0.6rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.badge-admin {
-  background: #ecfdf5;
-  color: #065f46;
-}
-
-.badge-user {
-  background: #f3f4f6;
-  color: #374151;
-}
-
-/* Actions */
-.action-cell {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.btn-sm {
-  padding: 0.3rem 0.65rem;
-  font-size: 0.8rem;
-}
-
-.btn-outline {
-  background: #ffffff;
-  border: 1px solid #10b981;
-  color: #065f46;
-}
-
-.btn-outline:hover {
-  background: #ecfdf5;
-}
-
-.btn-danger {
-  background: #fee2e2;
-  color: #991b1b;
-  border: none;
-}
-
-.btn-danger:hover {
-  background: #fecaca;
-}
-
-
-/* Header Section */
 .dashboard-header {
-  background: linear-gradient(135deg, #10b981 0%, #ffffff 100%);
-  padding: 2rem 2rem 3rem;
-  margin-bottom: -1rem;
+  margin-bottom: 2rem;
 }
 
 .header-content {
-  max-width: 1200px;
-  margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-/* Header nav/list layout: keep list reset, align items, and provide spacing for links/buttons */
-.header-content ul{
-  margin: 0;
-  padding: 0;
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  /* keep links on a single row; allow horizontal scroll if needed on very small screens */
-  flex-wrap: nowrap;
-  white-space: nowrap;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-.header-content li{
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: rgba(70, 70, 70, 0.95);
-  font-weight: 600;
-}
-.header-content li a{
-  color: inherit;
-  text-decoration: none;
-  display: inline-block;
-  padding: 0.25rem 0.5rem;
-  border-radius: 8px;
-}
-.header-content li a:hover{
-  text-decoration: none;
-  background: rgba(255,255,255,0.06);
-  opacity: 0.98;
-}
-
-/* visually hide native scrollbar while still allowing scroll */
-.header-content ul::-webkit-scrollbar{
-  height: 6px;
-}
-.header-content ul::-webkit-scrollbar-thumb{
-  background: rgba(255,255,255,0.12);
-  border-radius: 6px;
-}
-.header-content ul::-webkit-scrollbar-track{
-  background: transparent;
-}
-
-/* Welcome text style (dark green) */
-.header-content .welcome{
-  color: #065f46; /* dark green */
-  font-weight: 700;
-  font-size: 0.95rem;
-  white-space: nowrap;
-  margin-right: 10px;
+  gap: 2rem;
 }
 
 .header-text {
-  color: rgb(0, 0, 0);
-}
-
-.dashboard-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin: 0 0 0.5rem 0;
-  color: rgb(87, 87, 87);
-  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  flex: 1;
 }
 
 .dashboard-title1 {
   font-size: 2.5rem;
   font-weight: 700;
-  margin: 0 0 0.5rem 0;
-  color: rgb(228, 224, 224);
-  text-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
 }
+
 .dashboard-subtitle {
-  font-size: 1.1rem;
-  margin: 0;
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: 400;
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
 }
-.dashboard-icon{
-  width: 40px;
-  height: 40px;
-  margin-right: 0.5rem;
-  color: #000;
-}
+
 .user-avatar {
-  display: flex;
-  align-items: center;
+  width: 64px;
+  height: 64px;
 }
 
 .avatar-circle {
-  width: 48px;
-  height: 48px;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
+  background: linear-gradient(135deg, #0EA5E9, #38BDF8);
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 1.5rem;
   font-weight: 600;
-  font-size: 1.2rem;
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
-/* Main Content */
-.health-dashboard > * {
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 2rem;
-  padding-right: 2rem;
-}
-
-/* Risk Score Card */
 .risk-score-card {
-  background: white;
-  border-radius: 20px;
-  padding: 2rem;
+  background: linear-gradient(135deg, #0EA5E9 0%, #06B6D4 100%);
+  border-radius: 1.5rem;
+  padding: 2.5rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.1);
+  color: white;
+  box-shadow: 0 20px 25px -5px rgba(14, 165, 233, 0.3);
+  width: 100%;
 }
 
 .risk-content {
@@ -300,30 +66,30 @@
   justify-content: space-between;
   align-items: center;
   gap: 2rem;
+  flex-wrap: wrap;
 }
 
 .risk-info {
   flex: 1;
+  min-width: 280px;
 }
 
 .risk-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 0.5rem 0;
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
 }
 
 .risk-message {
-  font-size: 1rem;
-  color: #6b7280;
-  margin: 0 0 1.5rem 0;
-  line-height: 1.5;
+  font-size: 1.125rem;
+  opacity: 0.9;
+  margin-bottom: 1.5rem;
 }
 
 .status-pills {
   display: flex;
-  gap: 0.75rem;
   flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .status-pill {
@@ -331,39 +97,39 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2rem;
   font-size: 0.875rem;
   font-weight: 500;
-  border: 1px solid;
-}
-
-.status-pill.status-normal {
-  background: #ecfdf5;
-  color: #065f46;
-  border-color: #a7f3d0;
-}
-
-.status-pill.status-monitor {
-  background: #fffbeb;
-  color: #92400e;
-  border-color: #fde68a;
+  backdrop-filter: blur(10px);
 }
 
 .status-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: currentColor;
+  background: white;
 }
 
-/* Circular Progress */
+.status-normal .status-dot {
+  background: #10B981;
+}
+
+.status-monitor .status-dot {
+  background: #F59E0B;
+}
+
 .risk-visual {
-  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .circular-progress {
   position: relative;
-  display: inline-block;
+  width: 140px;
+  height: 140px;
 }
 
 .progress-ring {
@@ -371,7 +137,7 @@
 }
 
 .progress-circle {
-  transition: stroke-dashoffset 1s ease-in-out;
+  transition: stroke-dashoffset 1s ease;
 }
 
 .progress-content {
@@ -383,44 +149,41 @@
 }
 
 .progress-score {
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 700;
-  color: #1f2937;
   line-height: 1;
 }
 
 .progress-label {
-  font-size: 0.875rem;
-  color: #6b7280;
-  font-weight: 500;
+  font-size: 0.7rem;
+  opacity: 0.9;
   margin-top: 0.25rem;
 }
 
-/* Metrics Grid */
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
+  width: 100%;
 }
 
 .metric-card {
   background: white;
-  border-radius: 16px;
+  border: 1px solid #E5E7EB;
+  border-radius: 1rem;
   padding: 1.5rem;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-  border: 1px solid #f3f4f6;
-  transition: all 0.3s ease;
+  transition: all 0.3s;
 }
 
 .metric-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
 .metric-card-highlight {
-  background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
-  border-color: #fde68a;
+  border: 2px solid #0EA5E9;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.05), rgba(56, 189, 248, 0.05));
 }
 
 .metric-header {
@@ -431,93 +194,91 @@
 }
 
 .metric-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  width: 48px;
+  height: 48px;
+  border-radius: 0.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
 }
 
 .heart-icon {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: linear-gradient(135deg, #FEE2E2, #FECACA);
+  color: #DC2626;
 }
 
 .glucose-icon {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: linear-gradient(135deg, #DBEAFE, #BFDBFE);
+  color: #2563EB;
 }
 
 .pulse-icon {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  background: linear-gradient(135deg, #DBEAFE, #BFDBFE);
+  color: #0EA5E9;
 }
 
 .metric-trend {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .trend-positive {
-  background: #ecfdf5;
-  color: #10b981;
-}
-
-.trend-stable {
-  background: #f3f4f6;
-  color: #6b7280;
+  background: #D1FAE5;
+  color: #059669;
 }
 
 .trend-warning {
-  background: #fef3c7;
-  color: #f59e0b;
+  background: #FEF3C7;
+  color: #D97706;
+}
+
+.trend-stable {
+  background: #E5E7EB;
+  color: #6B7280;
 }
 
 .metric-value {
   font-size: 2rem;
   font-weight: 700;
-  color: #1f2937;
-  line-height: 1;
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
 .metric-unit {
   font-size: 1rem;
   font-weight: 400;
-  color: #6b7280;
-  margin-left: 0.25rem;
+  color: var(--text-secondary);
+  margin-left: 0.5rem;
 }
 
 .metric-subtext {
-  font-size: 0.85rem;
-  color: #6b7280;
-  margin-top: 0.35rem;
-  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
 }
 
 .metric-label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #6b7280;
-  margin-bottom: 0.25rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
 }
 
 .metric-status {
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
 }
 
-/* Chart Section */
 .chart-card {
   background: white;
-  border-radius: 16px;
+  border: 1px solid #E5E7EB;
+  border-radius: 1rem;
   padding: 1.5rem;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-  border: 1px solid #f3f4f6;
-  margin-bottom: 2rem;
+  width: 100%;
 }
 
 .chart-header {
@@ -530,127 +291,255 @@
 .chart-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1f2937;
-  margin: 0;
-}
-
-.chart-info {
-  font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--text-primary);
 }
 
 .chart-range {
-  background: #f3f4f6;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  padding: 0.375rem 0.75rem;
+  background: #F9FAFB;
+  border-radius: 0.375rem;
 }
 
 .chart-container {
-  position: relative;
+  padding: 1rem 0;
+  width: 100%;
+  overflow-x: auto;
 }
 
 .line-chart {
   width: 100%;
-  height: 100px;
-  margin-bottom: 1rem;
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 
 .chart-labels {
   display: flex;
   justify-content: space-between;
+  margin-top: 1rem;
   font-size: 0.75rem;
-  color: #9ca3af;
-  font-weight: 500;
+  color: var(--text-secondary);
 }
 
-/* Loading State */
+.chart-placeholder {
+  padding: 3rem;
+  text-align: center;
+  color: var(--text-secondary);
+  background: #F9FAFB;
+  border-radius: 0.5rem;
+}
+
 .dashboard-loading {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 60vh;
-  color: #6b7280;
+  min-height: 400px;
+  gap: 1rem;
 }
 
 .loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #f3f4f6;
-  border-top: 3px solid #10b981;
+  width: 48px;
+  height: 48px;
+  border: 4px solid #E0F2FE;
+  border-top-color: #0EA5E9;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
-  .health-dashboard > * {
-    padding-left: 1rem;
-    padding-right: 1rem;
+  .risk-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 1.5rem;
+    align-items: center;
   }
-  
-  .dashboard-header {
-    padding: 1.5rem 1rem 2rem;
+
+  .risk-info {
+    min-width: 100%;
+    width: 100%;
   }
-  
-  .dashboard-title {
+
+  .risk-score-card {
+    padding: 1.5rem;
+  }
+
+  .risk-title {
+    font-size: 1.5rem;
+  }
+
+  .risk-message {
+    font-size: 1rem;
+  }
+
+  .status-pills {
+    justify-content: center;
+  }
+
+  .circular-progress {
+    width: 120px;
+    height: 120px;
+  }
+
+  .progress-score {
     font-size: 2rem;
   }
-  
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .metric-card {
+    padding: 1.25rem;
+  }
+
+  .metric-value {
+    font-size: 1.75rem;
+  }
+
+  .metric-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .chart-card {
+    padding: 1.25rem;
+  }
+
+  .chart-title {
+    font-size: 1.125rem;
+  }
+
+  .chart-labels {
+    font-size: 0.625rem;
+  }
+
+  .dashboard-title1 {
+    font-size: 2rem;
+  }
+
+  .dashboard-subtitle {
+    font-size: 1rem;
+  }
+
   .header-content {
     flex-direction: column;
     gap: 1rem;
     text-align: center;
   }
-  
-  .risk-content {
-    flex-direction: column;
-    text-align: center;
+
+  .user-avatar {
+    width: 56px;
+    height: 56px;
   }
-  
-  .metrics-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+
+  .avatar-circle {
+    font-size: 1.25rem;
   }
-  
-  .status-pills {
-    justify-content: center;
+
+  .chart-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
-  
-  .chart-header {
-    flex-direction: column;
-    gap: 0.5rem;
-    align-items: flex-start;
+
+  .line-chart {
+    min-width: 300px;
   }
 }
 
 @media (max-width: 480px) {
-  .dashboard-title {
-    font-size: 1.75rem;
+  .risk-score-card {
+    padding: 1.25rem;
   }
-  
-  .risk-score-card,
-  .metric-card,
-  .chart-card {
-    padding: 1rem;
+
+  .risk-title {
+    font-size: 1.25rem;
   }
-  
-  .metric-value {
-    font-size: 1.75rem;
+
+  .risk-message {
+    font-size: 0.875rem;
   }
-  
+
+  .status-pill {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+  }
+
+  .circular-progress {
+    width: 100px;
+    height: 100px;
+  }
+
   .progress-score {
     font-size: 1.75rem;
   }
-}
 
-button{
-  margin-right: 0px;
+  .progress-label {
+    font-size: 0.75rem;
+  }
+
+  .metric-card {
+    padding: 1rem;
+  }
+
+  .metric-value {
+    font-size: 1.5rem;
+  }
+
+  .metric-unit {
+    font-size: 0.875rem;
+  }
+
+  .metric-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .metric-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .chart-card {
+    padding: 1rem;
+  }
+
+  .chart-title {
+    font-size: 1rem;
+  }
+
+  .chart-range {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .line-chart {
+    height: 80px;
+  }
+
+  .dashboard-title1 {
+    font-size: 1.5rem;
+  }
+
+  .dashboard-subtitle {
+    font-size: 0.875rem;
+  }
+
+  .user-avatar {
+    width: 48px;
+    height: 48px;
+  }
+
+  .avatar-circle {
+    font-size: 1.125rem;
+  }
 }

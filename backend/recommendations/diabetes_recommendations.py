@@ -1,18 +1,17 @@
-def generate_diabetes_recommendations(risk_data: dict):
-    """
-    Rule-based, explanation-driven diabetes recommendations.
-    No diagnosis. No emergency or medication instructions.
-    Guidance is strictly derived from attribution data.
-    """
+from typing import Dict, List
+
+
+def generate_diabetes_recommendations(risk_data: Dict) -> List[str]:
 
     recommendations = []
-
     risk_level = risk_data.get("risk_level", "Unknown")
     attribution = risk_data.get("attribution", {})
 
-    # ---------------- IMMEDIATE GLYCEMIC CONTRIBUTORS ----------------
-    glycemic = attribution.get("immediate_glycemic", {})
+    # ============================================================
+    # IMMEDIATE GLYCEMIC CONTRIBUTORS
+    # ============================================================
 
+    glycemic = attribution.get("immediate_glycemic", {})
     glucose_value = glycemic.get("glucose_value")
     glucose_context = glycemic.get("glucose_context")
     trend = glycemic.get("trend")
@@ -20,103 +19,88 @@ def generate_diabetes_recommendations(risk_data: dict):
     if glucose_value is not None:
         if glucose_context == "fasting" and glucose_value >= 126:
             recommendations.append(
-                "Elevated fasting glucose is a major contributor to your risk, indicating reduced overnight blood sugar regulation."
+                f"Your fasting glucose is {glucose_value} mg/dL, which is high. Please follow a strict low-glycemic meal pattern and regular glucose checks."
             )
         elif glucose_context == "post-meal" and glucose_value >= 180:
             recommendations.append(
-                "High post-meal glucose levels contribute significantly to your risk, suggesting difficulty processing dietary carbohydrates."
+                f"Your post-meal glucose is {glucose_value} mg/dL, which indicates a post-food spike. Reduce refined carbohydrates and keep portions controlled."
             )
         elif glucose_value >= 100:
             recommendations.append(
-                "Borderline glucose levels contribute to your risk and benefit from consistent dietary and activity management."
+                f"Your glucose is {glucose_value} mg/dL, slightly above ideal. Early lifestyle correction can prevent progression."
             )
 
     if trend == "worsening":
         recommendations.append(
-            "Your glucose trend is worsening, which suggests current lifestyle or treatment strategies may need adjustment."
+            "Your glucose trend is worsening. Please repeat readings consistently and review treatment with your doctor."
         )
     elif trend == "stable":
         recommendations.append(
-            "Your glucose trend is stable, indicating partial control that can be strengthened with consistent habits."
+            "Your glucose trend is stable. Continue the same routine and improve meal quality to bring readings closer to target."
         )
     elif trend == "improving":
         recommendations.append(
-            "Your improving glucose trend suggests that recent lifestyle or treatment efforts are having a positive effect."
+            "Your glucose trend is improving. Continue the current plan and keep monitoring."
         )
 
-    # ---------------- TREATMENT & SYMPTOM CONTRIBUTORS ----------------
-    treatment = attribution.get("treatment_symptoms", {})
+    # ============================================================
+    # BASELINE CONTRIBUTORS
+    # ============================================================
 
-    if treatment.get("symptoms") == "severe":
-        recommendations.append(
-            "Severe symptoms are contributing to your risk. Regular monitoring and timely clinical review are important."
-        )
-    elif treatment.get("symptoms") == "mild":
-        recommendations.append(
-            "Mild symptoms indicate ongoing glucose fluctuations that can be improved through consistent management."
-        )
-
-    if treatment.get("medication") == "none" and risk_level in ["High Risk", "Critical Risk"]:
-        recommendations.append(
-            "Absence of medication alongside elevated risk suggests the need for closer medical follow-up."
-        )
-
-    if treatment.get("meal_type") == "high-carb":
-        recommendations.append(
-            "High-carbohydrate meals are contributing to glucose spikes. Reducing refined carbohydrates can help stabilize blood sugar."
-        )
-    elif treatment.get("meal_type") == "balanced":
-        recommendations.append(
-            "Balanced meals support glucose control, though portion consistency remains important."
-        )
-    elif treatment.get("meal_type") == "low-carb":
-        recommendations.append(
-            "Low-carbohydrate dietary patterns are helping reduce glucose variability."
-        )
-
-    # ---------------- BASELINE CONTRIBUTORS ----------------
     baseline = attribution.get("baseline", {})
 
     if baseline.get("bmi_category") in ["overweight", "obese"]:
         recommendations.append(
-            "Body weight is influencing insulin sensitivity. Gradual weight management can significantly reduce diabetes risk."
+            "Weight reduction can improve sugar control. A practical target is 5-10% weight loss over time under medical guidance."
         )
 
     if baseline.get("physical_activity") == "never":
         recommendations.append(
-            "Lack of physical activity contributes to insulin resistance. Introducing regular light-to-moderate activity can help."
+            "Begin regular activity: at least 30 minutes of brisk walking on most days (about 150 minutes/week), if medically safe for you."
         )
     elif baseline.get("physical_activity") == "sometimes":
         recommendations.append(
-            "Inconsistent physical activity contributes to risk. Establishing a regular exercise routine improves glucose uptake."
-        )
-    elif baseline.get("physical_activity") == "active":
-        recommendations.append(
-            "Your active lifestyle supports glucose control and helps reduce long-term diabetes complications."
+            "Make activity consistent: 30 minutes/day for 5 days/week, plus a short 10-15 minute walk after meals."
         )
 
-    if baseline.get("family_history") is True:
+    if baseline.get("family_history"):
         recommendations.append(
-            "Family history increases susceptibility to diabetes, making preventive lifestyle consistency especially important."
+            "Family history increases your risk. Regular follow-up blood sugar testing is very important even when symptoms are mild."
         )
 
-    # ---------------- RISK-LEVEL GUIDANCE ----------------
+    # ============================================================
+    # DIETARY ADVICE (DOCTOR-STYLE, PRACTICAL)
+    # ============================================================
+    recommendations.append(
+        "Diet advice: Use the plate method in each meal (1/2 non-starchy vegetables, 1/4 lean protein, 1/4 whole grains). Prefer oats, dal/beans, whole wheat, brown rice, nuts, and seeds."
+    )
+    recommendations.append(
+        "Fruits suitable for diabetes (portion-controlled): apple, pear, guava, orange, sweet lime, berries, kiwi, papaya, and pomegranate seeds. Take whole fruit, not juice."
+    )
+    recommendations.append(
+        "Portion advice: one small fruit at a time (or about 1 cup cut fruit). Avoid fruit juices, sweetened drinks, and frequent sweets."
+    )
+
+    # ============================================================
+    # RISK LEVEL GUIDANCE
+    # ============================================================
+
     if risk_level in ["High Risk", "Critical Risk"]:
         recommendations.append(
-            "Your overall diabetes risk is elevated. Consistent monitoring and sustained lifestyle improvements are strongly advised."
+            "Your diabetes risk is high. Please schedule a doctor review soon for personalized treatment, medication adjustment, and complication screening."
         )
     elif risk_level == "Moderate Risk":
         recommendations.append(
-            "Your diabetes risk is moderate. Preventive habits and regular monitoring can help prevent progression."
+            "You are at moderate risk. With consistent food, activity, and follow-up, risk progression can often be reduced."
         )
     else:
         recommendations.append(
-            "Your diabetes risk is currently low. Maintaining healthy routines is important for long-term protection."
+            "Your current risk is low. Continue healthy routines and periodic monitoring."
         )
 
-    # ---------------- SAFETY DISCLAIMER ----------------
     recommendations.append(
-        "These recommendations provide general health guidance and are not a medical diagnosis."
+        "Ask your doctor about periodic HbA1c, kidney function, lipid profile, eye check, and foot check as part of long-term diabetes safety."
     )
+
 
     return recommendations

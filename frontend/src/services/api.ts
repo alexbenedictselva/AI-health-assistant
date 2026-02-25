@@ -43,7 +43,16 @@ export interface LoginData {
 export interface RegisterData {
   name: string;
   email: string;
+  phone_number: string;
   password: string;
+}
+
+export interface UserProfileData {
+  id: number;
+  name: string;
+  email: string;
+  phone_number: string;
+  is_admin?: boolean;
 }
 
 export interface DiabetesRiskData {
@@ -62,23 +71,6 @@ export interface DiabetesRiskData {
   family_history: boolean;
 }
 
-export interface CardiacRiskData {
-  user_id: number;
-  chest_pain: string;
-  shortness_of_breath: string;
-  heart_rate?: number;
-  blood_pressure: string;
-  smoking: string;
-  physical_activity: string;
-  diet: string;
-  diabetes: boolean;
-  age: number;
-  bmi_category: string;
-  weight_kg?: number;
-  height_cm?: number;
-  family_history: boolean;
-}
-
 export interface UserMetricsData {
   user_id: number;
   disease_type: string;
@@ -89,6 +81,8 @@ export interface UserMetricsData {
 export const authAPI = {
   login: (data: LoginData) => api.post('/login', data),
   register: (data: RegisterData) => api.post('/register', data),
+  getMe: () => api.get<UserProfileData>('/me'),
+  updateMe: (data: { name: string; email: string; phone_number: string }) => api.post<UserProfileData>('/me', data),
   getUsers: () => api.get('/users'),
   deleteUser: (userId: number) => api.delete(`/users/${userId}`),
   toggleAdmin: (userId: number, isAdmin: boolean) => api.post(`/users/${userId}/admin-toggle`, { is_admin: isAdmin }),
@@ -96,14 +90,11 @@ export const authAPI = {
   getUserRecommendations: (userId: number) => api.get(`/users/${userId}/recommendations`),
 };
 
-// Risk Assessment API (names expected by codebase)
+// Risk Assessment API
 export const riskAPI = {
   calculateDiabetesRisk: (data: any) => api.post('/diabetes-risk', data),
-  calculateCardiacRisk: (data: any) => api.post('/cardiac-risk', data),
-  getDiabetesExplanation: (data: any) => api.post('/explain', data),
-  getCardiacExplanation: (data: any) => api.post('/explain-cardiac', data),
+  getDiabetesExplanation: (data: any) => api.post('/explain-diabetes', data),
   getDiabetesRecommendations: (data: any) => api.post('/diabetes-recommendations', data),
-  getCardiacRecommendations: (data: any) => api.post('/cardiac-recommendations', data),
 };
 
 // User Metrics API

@@ -5,11 +5,11 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Header from './components/Header';
 import Dashboard from './pages/Dashboard';
 import DiabetesAssessment from './pages/DiabetesAssessment';
-import CardiacAssessment from './pages/CardiacAssessment';
 import UserMetrics from './pages/UserMetrics';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import AdminDashboard from './pages/AdminDashboard';
+import Profile from './pages/Profile';
 
 function AppContent() {
   const { isAuthenticated, user } = useAuth();
@@ -54,18 +54,18 @@ function AppContent() {
             } 
           />
           <Route 
-            path="/cardiac" 
-            element={
-              isAuthenticated ? 
-              <CardiacAssessment /> : 
-              <Navigate to="/login" />
-            } 
-          />
-          <Route 
             path="/metrics" 
             element={
               isAuthenticated ? 
               <UserMetrics /> : 
+              <Navigate to="/login" />
+            } 
+          />
+          <Route 
+            path="/profile" 
+            element={
+              isAuthenticated ? 
+              <Profile /> : 
               <Navigate to="/login" />
             } 
           />

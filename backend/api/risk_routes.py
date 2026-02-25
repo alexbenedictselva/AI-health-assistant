@@ -1,8 +1,5 @@
-# api/risk_routes.py
-
 from fastapi import APIRouter, Depends, HTTPException
 from models.diabetes_model import RiskInput
-from models.cardiac_model import CardiacRiskInput
 from risk_calculator.diabetes_risk_calculator import calculate_risk_score
 from auth.auth_utils import get_current_user
 from models.user import User
@@ -13,7 +10,6 @@ router = APIRouter()
 def calculate_risk(data: RiskInput, current_user: User = Depends(get_current_user)):
     from database import SessionLocal
     from models.diabetes_db_model import DiabetesRiskRecord
-    from ExplanableAI.diabetes_explanation_ai import generate_explanation, generate_summary
     
     # Calculate risk score
     result = calculate_risk_score(
@@ -60,13 +56,6 @@ def calculate_risk(data: RiskInput, current_user: User = Depends(get_current_use
     finally:
         db.close()
     
-    # Generate explanation and summary
-    explanation = generate_explanation(result)
-    summary = generate_summary(result)
-    
-    # Add explanation to result
-    result["explanation"] = explanation
-    result["summary"] = summary
     result["record_id"] = db_record.record_id
 
     # --- Comparison with previous record (if exists) ---
@@ -178,75 +167,4 @@ def calculate_risk(data: RiskInput, current_user: User = Depends(get_current_use
         # Comparison is optional; failures shouldn't block the main response
         pass
 
-    return result
-
-@router.post("/cardiac-risk")
-def calculate_cardiac_risk_endpoint(data: CardiacRiskInput, current_user: User = Depends(get_current_user)):
-    from risk_calculator.cardiac_risk_calculator import calculate_cardiac_risk
-    from database import SessionLocal
-    from models.cardiac_db_model import CardiacRiskRecord
-    from ExplanableAI.cardiac_explanation_ai import generate_cardiac_explanation, generate_cardiac_summary
-    
-    # Convert Pydantic model to dict
-    risk_data = data.dict()
-    
-    # Calculate risk
-    result = calculate_cardiac_risk(risk_data)
-    
-    # Add percentage breakdown
-    total_score = result["risk_score"]
-    attribution = result["attribution"]
-    
-    immediate_total = sum(attribution["immediate"].values())
-    lifestyle_total = sum(attribution["lifestyle"].values())
-    baseline_total = sum(attribution["baseline"].values())
-    
-    if total_score > 0:
-        result["percentage_breakdown"] = {
-            "immediate_cardiac_percentage": round((immediate_total / total_score) * 100, 1),
-            "lifestyle_percentage": round((lifestyle_total / total_score) * 100, 1),
-            "baseline_percentage": round((baseline_total / total_score) * 100, 1)
-        }
-    else:
-        result["percentage_breakdown"] = {
-            "immediate_cardiac_percentage": 0,
-            "lifestyle_percentage": 0,
-            "baseline_percentage": 0
-        }
-    
-    # Store in database
-    db = SessionLocal()
-    try:
-        # Persist with authenticated user's id
-        db_record = CardiacRiskRecord(
-            user_id=current_user.id,
-            chest_pain=data.chest_pain,
-            shortness_of_breath=data.shortness_of_breath,
-            heart_rate=data.heart_rate,
-            blood_pressure=data.blood_pressure,
-            smoking=data.smoking,
-            physical_activity=data.physical_activity,
-            diet=data.diet,
-            diabetes=data.diabetes,
-            age=data.age,
-            bmi_category=data.bmi_category,
-            family_history=data.family_history,
-            risk_score=result["risk_score"],
-            risk_level=result["risk_level"]
-        )
-        db.add(db_record)
-        db.commit()
-        db.refresh(db_record)
-    finally:
-        db.close()
-    
-    # Generate explanation and summary
-    explanation = generate_cardiac_explanation(result)
-    summary = generate_cardiac_summary(result)
-    
-    # Add explanation to result
-    result["explanation"] = explanation
-    result["summary"] = summary
-    result["record_id"] = db_record.record_id
-    
     return result

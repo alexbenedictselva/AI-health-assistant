@@ -4,7 +4,7 @@ from datetime import datetime
 
 class UserMetricsInput(BaseModel):
     user_id: int
-    disease_type: str  # "diabetes" or "cardiac"
+    disease_type: str  # "diabetes"
     latest_risk_score: int
     previous_risk_score: Optional[int] = None
     average_risk_score: Optional[float] = None

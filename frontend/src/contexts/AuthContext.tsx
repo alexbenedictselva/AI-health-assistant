@@ -9,6 +9,7 @@ interface User {
   id: number;
   name: string;
   email: string;
+  phone_number?: string;
   is_admin?: boolean;
 }
 
@@ -18,6 +19,7 @@ interface AuthContextType {
   login: (token: string, userData: User) => void;
   logout: () => void;
   getUserId: () => number;
+  updateUser: (userData: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -69,6 +71,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsAuthenticated(false);
   };
 
+  const updateUser = (userData: User) => {
+    localStorage.setItem("user", JSON.stringify(userData));
+    setUser(userData);
+  };
+
   /* =========================================
      🚨 Auto logout when token expires (401)
      Triggered by Axios interceptor
@@ -114,6 +121,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         login,
         logout,
         getUserId,
+        updateUser,
       }}
     >
       {children}

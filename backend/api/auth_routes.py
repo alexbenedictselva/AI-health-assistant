@@ -20,30 +20,55 @@ def get_db():
 class RegisterInput(BaseModel):
     name: str
     email: str
+    phone_number: str
     password: str
 
 class LoginInput(BaseModel):
     email: str
     password: str
 
+
+class UpdateProfileInput(BaseModel):
+    name: str
+    email: str
+    phone_number: str
+
 @router.post("/register")
 def register(data: RegisterInput, db: Session = Depends(get_db)):
-    existing_user = db.query(User).filter(User.email == data.email).first()
+    name = data.name.strip()
+    email = data.email.strip().lower()
+    phone_number = data.phone_number.strip()
+    password = data.password
+
+    if not name:
+        raise HTTPException(status_code=400, detail="Name is required")
+    if "@" not in email:
+        raise HTTPException(status_code=400, detail="Invalid email")
+    if len(phone_number) < 8:
+        raise HTTPException(status_code=400, detail="Invalid phone number")
+    if len(password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+
+    existing_user = db.query(User).filter(User.email == email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
+    existing_phone = db.query(User).filter(User.phone_number == phone_number).first()
+    if existing_phone:
+        raise HTTPException(status_code=400, detail="Phone number already registered")
 
     # Determine admin status by email domain: emails ending with '@aiassistant.in' are admins
     is_admin_flag = False
     try:
-        if isinstance(data.email, str) and data.email.strip().lower().endswith('@aiassistant.in'):
+        if isinstance(email, str) and email.endswith('@aiassistant.in'):
             is_admin_flag = True
     except Exception:
         is_admin_flag = False
 
     user = User(
-        name=data.name,
-        email=data.email,
-        hashed_password=hash_password(data.password),
+        name=name,
+        email=email,
+        phone_number=phone_number,
+        hashed_password=hash_password(password),
         is_admin=is_admin_flag
     )
 
@@ -55,7 +80,8 @@ def register(data: RegisterInput, db: Session = Depends(get_db)):
 
 @router.post("/login")
 def login(data: LoginInput, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == data.email).first()
+    email = data.email.strip().lower()
+    user = db.query(User).filter(User.email == email).first()
     
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
@@ -66,7 +92,13 @@ def login(data: LoginInput, db: Session = Depends(get_db)):
     token = create_access_token({"sub": user.email})
 
     # Return user info along with token so frontend can store it
-    user_info = {"id": user.id, "name": user.name, "email": user.email, "is_admin": bool(user.is_admin)}
+    user_info = {
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "phone_number": user.phone_number,
+        "is_admin": bool(user.is_admin)
+    }
     return {
         "access_token": token,
         "token_type": "bearer",
@@ -129,7 +161,63 @@ def toggle_admin(user_id: int, payload: AdminToggleInput, current_user: User = D
 
 @router.get("/me")
 def get_me(current_user: User = Depends(get_current_user)):
-    return {"id": current_user.id, "name": current_user.name, "email": current_user.email}
+    return {
+        "id": current_user.id,
+        "name": current_user.name,
+        "email": current_user.email,
+        "phone_number": current_user.phone_number,
+        "is_admin": bool(current_user.is_admin)
+    }
+
+
+def _update_user_profile(payload: UpdateProfileInput, current_user: User, db: Session):
+    name = payload.name.strip()
+    email = payload.email.strip().lower()
+    phone_number = payload.phone_number.strip()
+
+    if not name:
+        raise HTTPException(status_code=400, detail="Name is required")
+    if "@" not in email:
+        raise HTTPException(status_code=400, detail="Invalid email")
+    if len(phone_number) < 8:
+        raise HTTPException(status_code=400, detail="Invalid phone number")
+
+    # Re-load user in this request session to avoid cross-session attach errors
+    db_user = db.query(User).filter(User.id == current_user.id).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    email_taken = db.query(User).filter(User.email == email, User.id != db_user.id).first()
+    if email_taken:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    phone_taken = db.query(User).filter(User.phone_number == phone_number, User.id != db_user.id).first()
+    if phone_taken:
+        raise HTTPException(status_code=400, detail="Phone number already registered")
+
+    db_user.name = name
+    db_user.email = email
+    db_user.phone_number = phone_number
+    db.commit()
+    db.refresh(db_user)
+
+    return {
+        "id": db_user.id,
+        "name": db_user.name,
+        "email": db_user.email,
+        "phone_number": db_user.phone_number,
+        "is_admin": bool(db_user.is_admin)
+    }
+
+
+@router.put("/me")
+def update_me_put(payload: UpdateProfileInput, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return _update_user_profile(payload, current_user, db)
+
+
+@router.post("/me")
+def update_me_post(payload: UpdateProfileInput, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return _update_user_profile(payload, current_user, db)
 
 
 @router.get("/admin/stats")
@@ -138,17 +226,15 @@ def admin_stats(current_user: User = Depends(get_current_user), db: Session = De
     if not getattr(current_user, 'is_admin', False):
         raise HTTPException(status_code=403, detail="Forbidden: admin access required")
 
-    from models.recommendations import DiabetesRecommendation, CardiacRecommendation
+    from models.recommendations import DiabetesRecommendation
 
     total_users = db.query(User).count()
     diabetes_recs = db.query(DiabetesRecommendation).count()
-    cardiac_recs = db.query(CardiacRecommendation).count()
 
     return {
         "total_users": total_users,
-        "total_recommendations": diabetes_recs + cardiac_recs,
-        "diabetes_recommendations": diabetes_recs,
-        "cardiac_recommendations": cardiac_recs
+        "total_recommendations": diabetes_recs,
+        "diabetes_recommendations": diabetes_recs
     }
 
 
@@ -158,10 +244,9 @@ def get_user_recommendations(user_id: int, current_user: User = Depends(get_curr
     if not getattr(current_user, 'is_admin', False):
         raise HTTPException(status_code=403, detail="Forbidden: admin access required")
 
-    from models.recommendations import DiabetesRecommendation, CardiacRecommendation
+    from models.recommendations import DiabetesRecommendation
 
     dia_rows = db.query(DiabetesRecommendation).filter(DiabetesRecommendation.user_id == user_id).order_by(DiabetesRecommendation.created_at.desc()).all()
-    car_rows = db.query(CardiacRecommendation).filter(CardiacRecommendation.user_id == user_id).order_by(CardiacRecommendation.created_at.desc()).all()
 
     def serialize(rows):
         out = []
@@ -180,6 +265,5 @@ def get_user_recommendations(user_id: int, current_user: User = Depends(get_curr
         return out
 
     return {
-        "diabetes": serialize(dia_rows),
-        "cardiac": serialize(car_rows)
+        "diabetes": serialize(dia_rows)
     }

@@ -1,2 +1,1 @@
 from .diabetes_recommendations import generate_diabetes_recommendations
-from .cardiac_recommendations import generate_cardiac_recommendations

@@ -96,49 +96,6 @@ const UserMetrics: React.FC = () => {
     </div>
   );
 
-  const renderCardiacMetrics = (metric: any) => (
-    <div className="card" key={metric.metric_id}>
-      <div className="card-header">
-  ❤️ Cardiac Metrics - {formatDate(metric.timestamp ?? metric.created_at)}
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-        <div>
-          <strong>Chest Pain:</strong> {metric.chest_pain}
-        </div>
-        <div>
-          <strong>Breathlessness:</strong> {metric.shortness_of_breath}
-        </div>
-        <div>
-          <strong>Heart Rate:</strong> {metric.heart_rate ? `${metric.heart_rate} BPM` : 'Not recorded'}
-        </div>
-        <div>
-          <strong>Blood Pressure:</strong> {metric.blood_pressure}
-        </div>
-        <div>
-          <strong>Smoking:</strong> {metric.smoking}
-        </div>
-        <div>
-          <strong>Diet:</strong> {metric.diet}
-        </div>
-        <div>
-          <strong>Age:</strong> {metric.age} years
-        </div>
-        <div>
-          <strong>Weight:</strong> {metric.weight_kg} kg
-        </div>
-        <div>
-          <strong>Height:</strong> {metric.height_cm} cm
-        </div>
-        <div>
-          <strong>Activity:</strong> {metric.physical_activity}
-        </div>
-        <div>
-          <strong>Family History:</strong> {metric.family_history ? 'Yes' : 'No'}
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div className="container">
       <h1 className="page-title">My Health Metrics</h1>
@@ -155,7 +112,6 @@ const UserMetrics: React.FC = () => {
           >
             <option value="all">All Metrics</option>
             <option value="diabetes">Diabetes Only</option>
-            <option value="cardiac">Cardiac Only</option>
           </select>
           <button 
             className="btn btn-secondary"
@@ -177,7 +133,7 @@ const UserMetrics: React.FC = () => {
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📊</div>
             <h3>No Metrics Found</h3>
             <p>You haven't recorded any health metrics yet.</p>
-            <p>Start by taking a diabetes or cardiac assessment to build your health history.</p>
+            <p>Start by taking a diabetes assessment to build your health history.</p>
           </div>
         </div>
       ) : (
@@ -187,9 +143,7 @@ const UserMetrics: React.FC = () => {
           </div>
           
           {metrics.map((metric) => 
-            metric.disease_type === 'diabetes' 
-              ? renderDiabetesMetrics(metric)
-              : renderCardiacMetrics(metric)
+            renderDiabetesMetrics(metric)
           )}
         </div>
       )}

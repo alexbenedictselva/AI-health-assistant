@@ -20,7 +20,7 @@ class User(Base):
     name = Column(String(100), nullable=False)
     email = Column(String(150), unique=True, index=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
-
+    phone_number = Column(String(20), unique=True, index=True, nullable=False)
     # ---------- SYSTEM METADATA ----------
     created_at = Column(DateTime, default=datetime.utcnow)
     # Admin flag to allow role-based access

@@ -1,20 +1,91 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { metricsAPI } from '../services/api';
+import { translateTexts } from '../services/translationService';
 import '../styles/HealthDashboard.css';
+
+const BASE_TEXTS = {
+  healthDashboard: 'Health Dashboard',
+  trackCondition: 'Track and manage your chronic condition',
+  overallRiskScore: 'Overall Health Risk Score',
+  glucose: 'Glucose',
+  bloodGlucose: 'Blood Glucose',
+  hba1cLevel: 'HbA1c Level',
+  bodyMassIndex: 'Body Mass Index',
+  glucoseTrend: 'Glucose Trend',
+  target: 'Target',
+  avg: 'Avg',
+  monthAverage: '3-month average',
+  normal: 'Normal',
+  stable: 'Stable',
+  monitor: 'Monitor',
+  high: 'High',
+  critical: 'Critical',
+  unknown: 'Unknown',
+  lowRisk: 'Low Risk',
+  moderateRisk: 'Moderate Risk',
+  highRisk: 'High Risk',
+  noData: 'No Data',
+  noTrendData: 'No trend data available. Start taking assessments to see your glucose trends.',
+  metricsGood: 'Your health metrics are looking good. Keep up the great work!',
+  metricsAttention: 'Some metrics need attention — consider following the recommended actions.',
+  metricsOutside: 'Multiple metrics are outside target ranges. Please consult your clinician.',
+  criticalValues: 'Critical values detected — seek immediate medical attention.',
+  noSufficientData: 'No sufficient data to compute risk.',
+  underweight: 'Underweight',
+  normalWeight: 'Normal Weight',
+  overweight: 'Overweight',
+  obese: 'Obese',
+  prediabetic: 'Prediabetic',
+  diabetic: 'Diabetic'
+};
+
+const getCurrentLanguage = () => localStorage.getItem('language') || 'en';
 
 const HealthDashboard: React.FC = () => {
   const { user } = useAuth();
   const [healthData, setHealthData] = useState({
-    overallRisk: 78,
-    riskLevel: 'Low Risk',
-    bloodPressure: { systolic: 118, diastolic: 76, status: 'Normal' },
-    glucose: { value: 102, status: 'Stable', unit: 'mg/dL', avg: undefined },
-    heartRate: { value: 78, status: 'Monitor', unit: 'bpm', avg: undefined },
-    glucoseTrend: [95, 98, 102, 99, 105, 101, 102]
+    overallRisk: 0,
+    riskLevel: 'No Data',
+    glucose: { value: 0, status: 'Unknown', unit: 'mg/dL', avg: undefined },
+    hba1c: { value: 0, status: 'Unknown', unit: '%' },
+    bmi: { value: 0, status: 'Unknown', category: 'Unknown' },
+    glucoseTrend: [] as { glucose: number; date: string; bmi: number | null }[]
   });
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [language, setLanguage] = useState(getCurrentLanguage());
+  const [texts, setTexts] = useState(BASE_TEXTS);
+
+  useEffect(() => {
+    const syncLanguage = () => setLanguage(getCurrentLanguage());
+    window.addEventListener('storage', syncLanguage);
+    window.addEventListener('language:changed', syncLanguage as EventListener);
+    return () => {
+      window.removeEventListener('storage', syncLanguage);
+      window.removeEventListener('language:changed', syncLanguage as EventListener);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (language === 'en') {
+      setTexts(BASE_TEXTS);
+      return;
+    }
+
+    let mounted = true;
+    translateTexts(Object.values(BASE_TEXTS), language).then(translated => {
+      if (!mounted) return;
+      const keys = Object.keys(BASE_TEXTS) as Array<keyof typeof BASE_TEXTS>;
+      const newTexts = {} as typeof BASE_TEXTS;
+      keys.forEach((key, i) => { newTexts[key] = translated[i]; });
+      setTexts(newTexts);
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, [language]);
 
   // fetchHealthData is defined inside the component; we intentionally run it once on mount
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -39,9 +110,8 @@ const HealthDashboard: React.FC = () => {
       const response = await metricsAPI.getUserMetrics(userId);
       const metrics = response.data || [];
 
-      // Separate diabetes and cardiac metrics
+      // Separate diabetes metrics
       const diabetesMetrics = metrics.filter((m: any) => m.disease_type === 'diabetes') || [];
-      const cardiacMetrics = metrics.filter((m: any) => m.disease_type === 'cardiac') || [];
 
       
 
@@ -53,46 +123,36 @@ const HealthDashboard: React.FC = () => {
       });
 
       const latestDiabetes = sortByDateDesc(diabetesMetrics)[0];
-      const latestCardiac = sortByDateDesc(cardiacMetrics)[0];
 
-      // Build glucose trend from last 7 diabetes entries (oldest -> newest), sanitize values
-      const glucoseTrend = sortByDateDesc(diabetesMetrics).slice(0,7).reverse().map((m: any) => Number(m.glucose_value)).filter((v: any) => Number.isFinite(v));
-
-      // parseBP helper and compute BP averages/latest
-      const parseBP = (bpStr: any) => {
-        if (!bpStr || typeof bpStr !== 'string') return null;
-        const parts = bpStr.split('/').map(p => parseInt(p, 10));
-        if (parts.length >= 2 && parts.every(n => Number.isFinite(n))) return { systolic: parts[0], diastolic: parts[1] };
-        return null;
-      };
-
-      const cardiacBPs = cardiacMetrics.map((m: any) => parseBP(m.blood_pressure)).filter(Boolean) as any[];
-      const avgSystolic = cardiacBPs.length ? Math.round(cardiacBPs.reduce((a,b) => a + b.systolic, 0) / cardiacBPs.length) : null;
-      const avgDiastolic = cardiacBPs.length ? Math.round(cardiacBPs.reduce((a,b) => a + b.diastolic, 0) / cardiacBPs.length) : null;
-      const latestBPParsed = latestCardiac ? parseBP(latestCardiac.blood_pressure) : null;
-
-      // Aggregate heart rate and glucose across all metrics
-      const allHeartRates = metrics.map((m: any) => Number(m.heart_rate)).filter((v: any) => Number.isFinite(v));
-      const heartRateAvg = allHeartRates.length ? Math.round(allHeartRates.reduce((a: number,b: number) => a + b, 0) / allHeartRates.length) : null;
-      const latestWithHeartRate = sortByDateDesc(metrics).find((m: any) => m.heart_rate !== undefined && m.heart_rate !== null);
-      const latestHeartRate = latestWithHeartRate ? Number(latestWithHeartRate.heart_rate) : (allHeartRates.length ? allHeartRates[0] : null);
+      // Build glucose trend with dates from last 7 diabetes entries
+      const trendData = sortByDateDesc(diabetesMetrics).slice(0, 7).reverse().map((m: any) => {
+        const bmi = m.weight_kg && m.height_cm ? (m.weight_kg / Math.pow(m.height_cm / 100, 2)).toFixed(1) : null;
+        return {
+          glucose: Number(m.glucose_value),
+          date: m.created_at || m.timestamp,
+          bmi: bmi ? Number(bmi) : null
+        };
+      }).filter((item: any) => Number.isFinite(item.glucose));
 
       const diabetesGlucoseValues = diabetesMetrics.map((m: any) => Number(m.glucose_value)).filter((v: any) => Number.isFinite(v));
       const glucoseAvg = diabetesGlucoseValues.length ? Math.round(diabetesGlucoseValues.reduce((a: number,b: number) => a + b, 0) / diabetesGlucoseValues.length) : null;
       const latestGlucose = latestDiabetes ? Number(latestDiabetes.glucose_value) : (diabetesGlucoseValues.length ? diabetesGlucoseValues[0] : null);
 
-      // Extract BP and Heart Rate from latest cardiac metric if available (fallback to averages)
-      const bp = latestBPParsed ? {
-        systolic: latestBPParsed.systolic || avgSystolic || 0,
-        diastolic: latestBPParsed.diastolic || avgDiastolic || 0,
-        status: latestBPParsed ? (latestBPParsed.systolic < 130 ? 'Normal' : 'High') : (avgSystolic ? (avgSystolic < 130 ? 'Normal' : 'High') : 'Unknown')
-      } : (avgSystolic ? { systolic: avgSystolic, diastolic: avgDiastolic || 0, status: avgSystolic < 130 ? 'Normal' : 'High' } : null);
+      // Calculate BMI from latest metrics
+      const latestWeight = latestDiabetes?.weight_kg || 70;
+      const latestHeight = latestDiabetes?.height_cm || 170;
+      const bmiValue = latestWeight / Math.pow(latestHeight / 100, 2);
+      const bmiCategory = bmiValue < 18.5 ? 'Underweight' : bmiValue < 25 ? 'Normal Weight' : bmiValue < 30 ? 'Overweight' : 'Obese';
+      const bmiStatus = bmiValue < 18.5 ? 'Low' : bmiValue < 25 ? 'Normal' : bmiValue < 30 ? 'Monitor' : 'High';
 
-      const heartRate = latestHeartRate ? { value: latestHeartRate, avg: heartRateAvg, status: latestHeartRate > 100 ? 'Monitor' : 'Normal', unit: 'bpm' } : (heartRateAvg ? { value: heartRateAvg, avg: heartRateAvg, status: heartRateAvg > 100 ? 'Monitor' : 'Normal', unit: 'bpm' } : null);
+      // HbA1c estimation (simplified)
+      const avgGlucose = glucoseAvg || 100;
+      const hba1cValue = ((avgGlucose + 46.7) / 28.7);
+      const hba1cStatus = hba1cValue < 5.7 ? 'Normal' : hba1cValue < 6.5 ? 'Prediabetic' : 'Diabetic';
 
       const glucose = latestGlucose ? { value: latestGlucose, avg: glucoseAvg, status: latestDiabetes && latestDiabetes.diabetes_status ? (latestDiabetes.diabetes_status === 'non-diabetic' ? 'Stable' : latestDiabetes.diabetes_status) : 'Stable', unit: latestDiabetes?.unit || 'mg/dL' } : (glucoseAvg ? { value: glucoseAvg, avg: glucoseAvg, status: 'Unknown', unit: 'mg/dL' } : null);
 
-      // Deterministic overall risk calc (simple heuristic based on latest metrics)
+      // Deterministic overall risk calc
       const computeRiskFromMetrics = () => {
         const components: number[] = [];
 
@@ -104,20 +164,16 @@ const HealthDashboard: React.FC = () => {
           else components.push(90);
         }
 
-        if (bp && bp.systolic && bp.diastolic) {
-          const s = bp.systolic;
-          const d = bp.diastolic;
-          if (s < 120 && d < 80) components.push(20);
-          else if (s < 130) components.push(40);
-          else if (s < 140) components.push(60);
+        if (hba1cValue) {
+          if (hba1cValue < 5.7) components.push(20);
+          else if (hba1cValue < 6.5) components.push(50);
           else components.push(80);
         }
 
-        if (heartRate && typeof heartRate.value === 'number') {
-          const hr = heartRate.value;
-          if (hr >= 60 && hr <= 100) components.push(30);
-          else if (hr > 100) components.push(70);
-          else components.push(40);
+        if (bmiValue) {
+          if (bmiValue >= 18.5 && bmiValue < 25) components.push(20);
+          else if (bmiValue < 30) components.push(50);
+          else components.push(70);
         }
 
         if (components.length === 0) return { score: 0, level: 'No Data' };
@@ -135,14 +191,10 @@ const HealthDashboard: React.FC = () => {
       setHealthData({
         overallRisk: computed.score,
         riskLevel: computed.level,
-        bloodPressure: {
-          systolic: bp?.systolic || 0,
-          diastolic: bp?.diastolic || 0,
-          status: bp?.systolic ? (bp.systolic < 130 ? 'Normal' : 'High') : 'Unknown'
-        },
         glucose: glucose ? { value: glucose.value, avg: (glucose as any).avg ?? null, status: glucose.status, unit: glucose.unit } : { value: 0, avg: null, status: 'Unknown', unit: 'mg/dL' },
-        heartRate: heartRate ? { value: heartRate.value, avg: (heartRate as any).avg ?? null, status: heartRate.status, unit: heartRate.unit } : { value: 0, avg: null, status: 'Unknown', unit: 'bpm' },
-        glucoseTrend: glucoseTrend.length ? glucoseTrend : [0]
+        hba1c: { value: parseFloat(hba1cValue.toFixed(1)), status: hba1cStatus, unit: '%' },
+        bmi: { value: parseFloat(bmiValue.toFixed(1)), status: bmiStatus, category: bmiCategory },
+        glucoseTrend: trendData
       });
 
       setLoading(false);
@@ -184,11 +236,11 @@ const HealthDashboard: React.FC = () => {
 
   const riskMessageForLevel = (level: string) => {
     const l = String(level || '').toLowerCase();
-    if (l === 'low risk') return 'Your health metrics are looking good. Keep up the great work!';
-    if (l === 'moderate risk') return 'Some metrics need attention — consider following the recommended actions.';
-    if (l === 'high risk') return 'Multiple metrics are outside target ranges. Please consult your clinician.';
-    if (l === 'critical') return 'Critical values detected — seek immediate medical attention.';
-    return 'No sufficient data to compute risk.';
+    if (l === 'low risk') return texts.metricsGood;
+    if (l === 'moderate risk') return texts.metricsAttention;
+    if (l === 'high risk') return texts.metricsOutside;
+    if (l === 'critical') return texts.criticalValues;
+    return texts.noSufficientData;
   };
 
   const CircularProgress = ({ score, label }: { score: number; label: string }) => {
@@ -198,7 +250,7 @@ const HealthDashboard: React.FC = () => {
     const strokeDashoffset = circumference - (score / 100) * circumference;
 
     return (
-      <div className="circular-progress">
+      <div className="circular-progress" style={{ position: 'relative', width: '120px', height: '120px' }}>
         <svg width="120" height="120" className="progress-ring">
           <circle
             cx="60"
@@ -222,7 +274,7 @@ const HealthDashboard: React.FC = () => {
             className="progress-circle"
           />
         </svg>
-        <div className="progress-content">
+        <div className="progress-content" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
           <div className="progress-score">{score}</div>
           <div className="progress-label">{label}</div>
         </div>
@@ -230,30 +282,42 @@ const HealthDashboard: React.FC = () => {
     );
   };
 
-  const LineChart = ({ data }: { data: number[] }) => {
-    const cleanData = (data || []).map(Number).filter(Number.isFinite);
-    if (cleanData.length === 0) {
+  const LineChart = ({ data }: { data: { glucose: number; date: string; bmi: number | null }[] }) => {
+    const [hoveredIndex, setHoveredIndex] = React.useState<number | null>(null);
+
+    if (data.length === 0) {
       return (
-        <div className="chart-placeholder" style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
-          No trend data available
+        <div className="chart-placeholder">
+          {texts.noTrendData}
         </div>
       );
     }
 
-    const maxValue = Math.max(...cleanData);
-    const minValue = Math.min(...cleanData);
+    const formatDate = (dateStr: string) => {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    };
+
+    const formatFullDate = (dateStr: string) => {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
+    const values = data.map(d => d.glucose);
+    const maxValue = Math.max(...values);
+    const minValue = Math.min(...values);
     const range = maxValue - minValue || 1;
-    const denom = Math.max(1, cleanData.length - 1);
+    const denom = Math.max(1, data.length - 1);
     
-    const points = cleanData.map((value, index) => {
-      const x = (index / denom) * 280;
-      const y = 80 - ((value - minValue) / range) * 60;
+    const points = data.map((item, index) => {
+      const x = (index / denom) * 1000;
+      const y = 300 - ((item.glucose - minValue) / range) * 250;
       return `${x},${y}`;
     }).join(' ');
 
     return (
-      <div className="chart-container">
-        <svg width="300" height="100" className="line-chart">
+      <div className="chart-container" style={{ position: 'relative', padding: '2rem 0' }}>
+        <svg width="1050" height="320" className="line-chart" style={{ width: '100%', height: 'auto' }}>
           <defs>
             <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#10B981" stopOpacity="0.3"/>
@@ -262,14 +326,14 @@ const HealthDashboard: React.FC = () => {
           </defs>
           
           {/* Grid lines */}
-          <line x1="0" y1="20" x2="280" y2="20" stroke="#E5F3F0" strokeWidth="1"/>
-          <line x1="0" y1="40" x2="280" y2="40" stroke="#E5F3F0" strokeWidth="1"/>
-          <line x1="0" y1="60" x2="280" y2="60" stroke="#E5F3F0" strokeWidth="1"/>
-          <line x1="0" y1="80" x2="280" y2="80" stroke="#E5F3F0" strokeWidth="1"/>
+          <line x1="0" y1="60" x2="1000" y2="60" stroke="#E5F3F0" strokeWidth="2"/>
+          <line x1="0" y1="140" x2="1000" y2="140" stroke="#E5F3F0" strokeWidth="2"/>
+          <line x1="0" y1="220" x2="1000" y2="220" stroke="#E5F3F0" strokeWidth="2"/>
+          <line x1="0" y1="300" x2="1000" y2="300" stroke="#E5F3F0" strokeWidth="2"/>
           
           {/* Area under curve */}
           <polygon
-            points={`0,80 ${points} 280,80`}
+            points={`0,300 ${points} 1000,300`}
             fill="url(#chartGradient)"
           />
           
@@ -278,49 +342,84 @@ const HealthDashboard: React.FC = () => {
             points={points}
             fill="none"
             stroke="#10B981"
-            strokeWidth="3"
+            strokeWidth="5"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
           
           {/* Data points */}
-          {cleanData.map((value, index) => {
-            const x = (index / denom) * 280;
-            const y = 80 - ((value - minValue) / range) * 60;
+          {data.map((item, index) => {
+            const x = (index / denom) * 1000;
+            const y = 300 - ((item.glucose - minValue) / range) * 250;
             return (
-              <circle
-                key={index}
-                cx={String(x)}
-                cy={String(y)}
-                r="4"
-                fill="#10B981"
-                stroke="#ffffff"
-                strokeWidth="2"
-              />
+              <g key={index}>
+                <circle
+                  cx={String(x)}
+                  cy={String(y)}
+                  r="8"
+                  fill="#10B981"
+                  stroke="#ffffff"
+                  strokeWidth="4"
+                />
+                <circle
+                  cx={String(x)}
+                  cy={String(y)}
+                  r="24"
+                  fill="transparent"
+                  style={{ cursor: 'pointer' }}
+                  onMouseEnter={() => setHoveredIndex(index)}
+                  onMouseLeave={() => setHoveredIndex(null)}
+                />
+              </g>
             );
           })}
         </svg>
         
-        <div className="chart-labels">
-          <span>Mon</span>
-          <span>Tue</span>
-          <span>Wed</span>
-          <span>Thu</span>
-          <span>Fri</span>
-          <span>Sat</span>
-          <span>Sun</span>
+        {/* Tooltip */}
+        {hoveredIndex !== null && (
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -120%)',
+            background: 'white',
+            padding: '12px',
+            border: '1px solid #E5E7EB',
+            borderRadius: '8px',
+            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+            zIndex: 10,
+            pointerEvents: 'none'
+          }}>
+            <p style={{ margin: '0 0 8px 0', fontWeight: '600', color: '#0F172A', fontSize: '0.875rem' }}>
+              {formatFullDate(data[hoveredIndex].date)}
+            </p>
+            <p style={{ margin: '4px 0', color: '#0EA5E9', fontWeight: '500', fontSize: '0.875rem' }}>
+              🩸 Glucose: {data[hoveredIndex].glucose} mg/dL
+            </p>
+            {data[hoveredIndex].bmi && (
+              <p style={{ margin: '4px 0', color: '#10B981', fontWeight: '500', fontSize: '0.875rem' }}>
+                📊 BMI: {data[hoveredIndex].bmi}
+              </p>
+            )}
+          </div>
+        )}
+        
+        <div className="chart-labels" style={{ display: 'flex', justifyContent: 'space-between', width: '100%', paddingLeft: '0', paddingRight: '0' }}>
+          {data.map((item, index) => {
+            const xPos = (index / denom) * 100;
+            return (
+              <span key={index} style={{ position: 'absolute', left: `${xPos}%`, transform: 'translateX(-50%)' }}>
+                {formatDate(item.date)}
+              </span>
+            );
+          })}
         </div>
       </div>
     );
   };
 
   if (loading) {
-    return (
-      <div className="dashboard-loading">
-        <div className="loading-spinner"></div>
-        <p>Loading your health dashboard...</p>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -329,8 +428,8 @@ const HealthDashboard: React.FC = () => {
       <div className="dashboard-header">
         <div className="header-content">
           <div className="header-text">
-            <h1 className="dashboard-title1">Health Dashboard</h1>
-            <p className="dashboard-subtitle">Track and manage your chronic condition</p>
+            <h1 className="dashboard-title1">{texts.healthDashboard}</h1>
+            <p className="dashboard-subtitle">{texts.trackCondition}</p>
           </div>
           <div className="user-avatar">
             <div className="avatar-circle">
@@ -344,21 +443,21 @@ const HealthDashboard: React.FC = () => {
       <div className="risk-score-card">
         <div className="risk-content">
           <div className="risk-info">
-            <h2 className="risk-title">Overall Health Risk Score</h2>
+            <h2 className="risk-title">{texts.overallRiskScore}</h2>
             <p className="risk-message">{riskMessageForLevel(healthData.riskLevel)}</p>
 
             <div className="status-pills">
-              <div className={statusToPillClass(healthData.bloodPressure.status)}>
-                <span className="status-dot"></span>
-                {`Blood Pressure ${healthData.bloodPressure.status}`}
-              </div>
               <div className={statusToPillClass(healthData.glucose.status)}>
                 <span className="status-dot"></span>
-                {`Glucose ${healthData.glucose.status}`}
+                {`${texts.glucose} ${healthData.glucose.status}`}
               </div>
-              <div className={statusToPillClass(healthData.heartRate.status)}>
+              <div className={statusToPillClass(healthData.hba1c.status)}>
                 <span className="status-dot"></span>
-                {`Heart Rate ${healthData.heartRate.status}`}
+                {`HbA1c ${healthData.hba1c.status}`}
+              </div>
+              <div className={statusToPillClass(healthData.bmi.status)}>
+                <span className="status-dot"></span>
+                {`BMI ${healthData.bmi.status}`}
               </div>
             </div>
           </div>
@@ -373,29 +472,6 @@ const HealthDashboard: React.FC = () => {
       <div className="metrics-grid">
         <div className="metric-card">
           <div className="metric-header">
-            <div className="metric-icon heart-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" strokeWidth="2"/>
-              </svg>
-            </div>
-            <div className={statusToTrendClass(healthData.bloodPressure.status)}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M8 12V4M4 8l4-4 4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-          </div>
-          <div className="metric-value">
-            {healthData.bloodPressure.systolic}/{healthData.bloodPressure.diastolic}
-            <span className="metric-unit">mmHg</span>
-          </div>
-          <div className="metric-label">Blood Pressure</div>
-          <div className="metric-status" style={{ color: getStatusColor(healthData.bloodPressure.status) }}>
-            {healthData.bloodPressure.status}
-          </div>
-        </div>
-
-        <div className="metric-card">
-          <div className="metric-header">
             <div className="metric-icon glucose-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" stroke="currentColor" strokeWidth="2"/>
@@ -408,13 +484,13 @@ const HealthDashboard: React.FC = () => {
             </div>
           </div>
           <div className="metric-value">
-              {healthData.glucose.value}
-              <span className="metric-unit">{healthData.glucose.unit}</span>
-              {healthData.glucose.avg ? (
-                <div className="metric-subtext">Avg: {healthData.glucose.avg} {healthData.glucose.unit}</div>
-              ) : null}
+            {healthData.glucose.value}
+            <span className="metric-unit">{healthData.glucose.unit}</span>
+            {healthData.glucose.avg ? (
+              <div className="metric-subtext">{texts.avg}: {healthData.glucose.avg} {healthData.glucose.unit}</div>
+            ) : null}
           </div>
-          <div className="metric-label">Blood Glucose</div>
+          <div className="metric-label">{texts.bloodGlucose}</div>
           <div className="metric-status" style={{ color: getStatusColor(healthData.glucose.status) }}>
             {healthData.glucose.status}
           </div>
@@ -424,25 +500,49 @@ const HealthDashboard: React.FC = () => {
           <div className="metric-header">
             <div className="metric-icon pulse-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M9 11l3 3L22 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
-            <div className={statusToTrendClass(healthData.heartRate.status)}>
+            <div className={statusToTrendClass(healthData.hba1c.status)}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M8 4v4M4 12l4-4 4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M8 4v8M4 8h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
               </svg>
             </div>
           </div>
           <div className="metric-value">
-            {healthData.heartRate.value}
-            <span className="metric-unit">{healthData.heartRate.unit}</span>
-            {healthData.heartRate.avg ? (
-              <div className="metric-subtext">Avg: {healthData.heartRate.avg} {healthData.heartRate.unit}</div>
-            ) : null}
+            {healthData.hba1c.value}
+            <span className="metric-unit">{healthData.hba1c.unit}</span>
+            <div className="metric-subtext">{texts.monthAverage}</div>
           </div>
-          <div className="metric-label">Heart Rate</div>
-          <div className="metric-status" style={{ color: getStatusColor(healthData.heartRate.status) }}>
-            {healthData.heartRate.status}
+          <div className="metric-label">{texts.hba1cLevel}</div>
+          <div className="metric-status" style={{ color: getStatusColor(healthData.hba1c.status) }}>
+            {healthData.hba1c.status}
+          </div>
+        </div>
+
+        <div className="metric-card">
+          <div className="metric-header">
+            <div className="metric-icon heart-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M12 20v-6M9 12l3-3 3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+              </svg>
+            </div>
+            <div className={statusToTrendClass(healthData.bmi.status)}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 12V4M4 8l4-4 4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <div className="metric-value">
+            {healthData.bmi.value}
+            <span className="metric-unit">kg/m²</span>
+            <div className="metric-subtext">{healthData.bmi.category}</div>
+          </div>
+          <div className="metric-label">{texts.bodyMassIndex}</div>
+          <div className="metric-status" style={{ color: getStatusColor(healthData.bmi.status) }}>
+            {healthData.bmi.status}
           </div>
         </div>
       </div>
@@ -450,9 +550,9 @@ const HealthDashboard: React.FC = () => {
       {/* Chart Section */}
       <div className="chart-card">
         <div className="chart-header">
-          <h3 className="chart-title">7-Day Glucose Trend</h3>
+          <h3 className="chart-title">{texts.glucoseTrend}</h3>
           <div className="chart-info">
-            <span className="chart-range">85-110 mg/dL</span>
+            <span className="chart-range">{texts.target}: 85-110 mg/dL</span>
           </div>
         </div>
         <LineChart data={healthData.glucoseTrend} />

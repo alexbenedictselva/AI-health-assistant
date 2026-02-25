@@ -7,7 +7,7 @@ interface Props {
   label?: string;
 }
 
-const RiskRing: React.FC<Props> = ({ score, size = 120, stroke = 10, label }) => {
+const RiskRing: React.FC<Props> = ({ score, size = 200, stroke = 16, label }) => {
   const normalized = Math.max(0, Math.min(100, Math.round(score)));
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -22,7 +22,7 @@ const RiskRing: React.FC<Props> = ({ score, size = 120, stroke = 10, label }) =>
   };
 
   return (
-    <div style={{ width: size, height: size, display: 'inline-block' }}>
+    <div style={{ width: size, height: size, display: 'inline-block', position: 'relative' }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         <defs>
           <linearGradient id="rg" x1="0%" x2="100%">
@@ -44,9 +44,9 @@ const RiskRing: React.FC<Props> = ({ score, size = 120, stroke = 10, label }) =>
           />
         </g>
       </svg>
-      <div style={{ textAlign: 'center', marginTop: -size + (size/2 - 12), fontWeight: 700, color: 'var(--muted-green)' }}>
-        <div style={{ fontSize: '1.25rem' }}>{normalized}</div>
-        <div style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>{label ?? 'Risk'}</div>
+      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', fontWeight: 700 }}>
+        <div style={{ fontSize: '1.5rem', color: getColor() }}>{normalized}</div>
+        <div style={{ fontSize: '0.75rem', color: '#64748B' }}>{label ?? 'Risk'}</div>
       </div>
     </div>
   );
