@@ -8,7 +8,7 @@ class UserMetrics(Base):
 
     metric_id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    disease_type = Column(String(20), nullable=False)  # "diabetes" or "cardiac"
+    disease_type = Column(String(20), nullable=False)  # "diabetes"
     
     # ---- Diabetes Metrics ----
     glucose_value = Column(Float, nullable=True)
@@ -18,14 +18,6 @@ class UserMetrics(Base):
     medication_type = Column(String(20), nullable=True)  # "none", "oral", "insulin"
     meal_type = Column(String(20), nullable=True)  # "low-carb", "balanced", "high-carb"
     diabetes_status = Column(String(20), nullable=True)  # "non-diabetic", "prediabetic", "type1", "type2"
-    
-    # ---- Cardiac Metrics ----
-    chest_pain = Column(String(20), nullable=True)  # "none", "sometimes", "severe"
-    shortness_of_breath = Column(String(20), nullable=True)  # "none", "exertion", "rest"
-    heart_rate = Column(Integer, nullable=True)
-    blood_pressure = Column(String(20), nullable=True)  # "normal", "high", "very_high"
-    smoking = Column(String(20), nullable=True)  # "never", "former", "current"
-    diet = Column(String(20), nullable=True)  # "healthy", "mixed", "high_fat"
     
     # ---- Common Metrics ----
     age = Column(Integer, nullable=True)
